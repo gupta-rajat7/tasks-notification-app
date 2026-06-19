@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.taskreminder.ui.app.TaskReminderApp
+import com.example.taskreminder.ui.app.TaskReminderRoot
 import com.example.taskreminder.ui.theme.TaskReminderTheme
 
 class MainActivity : ComponentActivity() {
@@ -14,16 +14,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            TaskReminderTheme {
-                TaskReminderHomeScreen()
-            }
+            TaskReminderRoot()
         }
     }
 }
 
 @Composable
 fun TaskReminderHomeScreen(modifier: Modifier = Modifier) {
-    TaskReminderApp(modifier = modifier)
+    TaskReminderRoot(modifier = modifier)
 }
 
 @Preview(showBackground = true)
