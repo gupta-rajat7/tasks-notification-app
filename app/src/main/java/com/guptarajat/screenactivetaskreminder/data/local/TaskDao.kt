@@ -34,6 +34,17 @@ interface TaskDao {
     )
     fun observePendingTasksForSelectedLists(completedStatus: String): Flow<List<CachedTask>>
 
+    @Query(
+        """
+        SELECT COUNT(*)
+        FROM tasks
+        INNER JOIN task_lists ON task_lists.id = tasks.taskListId
+        WHERE task_lists.isSelected = 1
+            AND tasks.status != :completedStatus
+        """,
+    )
+    suspend fun countPendingTasksForSelectedLists(completedStatus: String): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertTasks(tasks: List<TaskEntity>)
 

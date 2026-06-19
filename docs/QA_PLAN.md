@@ -38,6 +38,9 @@
 
 - Reminder appears only when pending tasks exist.
 - Reminder does not appear during quiet hours.
+- Today > Enable requests or confirms notification permission.
+- Today > Check now posts a reminder notification when cached pending tasks are eligible.
+- Notification contains Review, Snooze, and Done for now actions.
 - Snooze suppresses reminders until snooze expires.
 - Review action opens the app.
 - Done for now updates review state.

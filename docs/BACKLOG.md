@@ -125,6 +125,16 @@ Acceptance criteria:
 - User can configure start and end.
 - Reminder engine respects the setting.
 
+### REM-004: Automatic Reminder Scheduling
+
+Schedule reminder checks without requiring the user to press Check now.
+
+Acceptance criteria:
+
+- App schedules the next reminder check after startup, settings changes, review, and snooze.
+- Scheduled checks reuse `ReminderRules` and `ReminderNotificationCoordinator`.
+- Scheduling remains conservative and avoids exact-alarm permission unless explicitly approved.
+
 ## P2: Product Polish
 
 ### UX-001: Onboarding Flow

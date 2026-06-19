@@ -84,6 +84,11 @@ $env:GRADLE_USER_HOME='C:\tmp\task-reminder-dev\gradle-home'
 - Settings can be changed and still remain after closing and reopening the app.
 - Google sign-in button starts a sign-in flow.
 - If sign-in cannot complete, note the exact message shown.
+- Today > Enable turns on notification permission when Android asks.
+- Today > Check now shows a reminder notification when pending tasks are cached and eligible.
+- Reminder notification has Review, Snooze, and Done for now actions.
+- Snooze removes the visible notification.
+- Done for now removes the visible notification.
 - App does not feel visually crowded.
 - Text is readable in light and dark mode.
 - No screen feels like an advertisement or sales page.
