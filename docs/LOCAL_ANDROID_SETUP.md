@@ -26,3 +26,10 @@ $env:GRADLE_USER_HOME='C:\tmp\task-reminder-dev\gradle-home'
 ```
 
 Use elevated shell permissions if Gradle reports a loopback connection error. Keep `--max-workers=1` on this Windows setup to avoid Gradle transform-cache move issues.
+
+If Kotlin compilation hangs on this Windows setup, rerun with Kotlin compilation in-process. Quote the `-P` argument in PowerShell:
+
+```powershell
+.\gradlew.bat --no-daemon --max-workers=1 --console=plain '-Pkotlin.compiler.execution.strategy=in-process' :app:assembleDebug
+.\gradlew.bat --no-daemon --max-workers=1 --console=plain '-Pkotlin.compiler.execution.strategy=in-process' :app:testDebugUnitTest
+```

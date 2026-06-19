@@ -23,12 +23,12 @@ Created a native Android Kotlin project scaffold with a single `app` module, Jet
 - `gradlew.bat`
 - `app/build.gradle.kts`
 - `app/src/main/AndroidManifest.xml`
-- `app/src/main/java/com/example/taskreminder/AppCopy.kt`
-- `app/src/main/java/com/example/taskreminder/MainActivity.kt`
-- `app/src/main/java/com/example/taskreminder/ui/theme/Theme.kt`
+- `app/src/main/java/com/guptarajat/screenactivetaskreminder/AppCopy.kt`
+- `app/src/main/java/com/guptarajat/screenactivetaskreminder/MainActivity.kt`
+- `app/src/main/java/com/guptarajat/screenactivetaskreminder/ui/theme/Theme.kt`
 - `app/src/main/res/values/strings.xml`
 - `app/src/main/res/values/themes.xml`
-- `app/src/test/java/com/example/taskreminder/AppCopyTest.kt`
+- `app/src/test/java/com/guptarajat/screenactivetaskreminder/AppCopyTest.kt`
 - `README.md`
 - `docs/DEVELOPMENT_WORKFLOW.md`
 - `docs/handoffs/2026-06-19-APP-001-android-scaffold.md`

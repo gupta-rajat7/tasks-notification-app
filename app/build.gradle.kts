@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.taskreminder"
+    namespace = "com.guptarajat.screenactivetaskreminder"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.taskreminder"
+        applicationId = "com.guptarajat.screenactivetaskreminder"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

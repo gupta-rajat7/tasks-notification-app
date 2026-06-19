@@ -14,10 +14,10 @@ Added the first real Compose app shell with Material 3 top app bar, bottom navig
 
 ## Files Changed
 
-- `app/src/main/java/com/example/taskreminder/AppCopy.kt`
-- `app/src/main/java/com/example/taskreminder/MainActivity.kt`
-- `app/src/main/java/com/example/taskreminder/ui/app/TaskReminderApp.kt`
-- `app/src/test/java/com/example/taskreminder/AppCopyTest.kt`
+- `app/src/main/java/com/guptarajat/screenactivetaskreminder/AppCopy.kt`
+- `app/src/main/java/com/guptarajat/screenactivetaskreminder/MainActivity.kt`
+- `app/src/main/java/com/guptarajat/screenactivetaskreminder/ui/app/TaskReminderApp.kt`
+- `app/src/test/java/com/guptarajat/screenactivetaskreminder/AppCopyTest.kt`
 - `app/build.gradle.kts`
 - `gradle/libs.versions.toml`
 - `docs/handoffs/2026-06-19-APP-002-compose-shell.md`
