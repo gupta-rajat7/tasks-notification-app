@@ -30,6 +30,30 @@ V1 should avoid AccessibilityService and forced overlays as default behavior. Th
 - [Session Handoff Template](docs/SESSION_HANDOFF_TEMPLATE.md)
 - [Architecture Decision Records](docs/adr/)
 
+## Build The Android App
+
+Prerequisites:
+
+- JDK 17 available through `JAVA_HOME` or `PATH`.
+- Android SDK Platform 35 installed.
+- `local.properties` present locally when Android Studio has not already configured the SDK path:
+
+```properties
+sdk.dir=C:\\Users\\<you>\\AppData\\Local\\Android\\Sdk
+```
+
+Build the debug APK:
+
+```powershell
+.\gradlew.bat :app:assembleDebug
+```
+
+Run JVM unit tests:
+
+```powershell
+.\gradlew.bat :app:testDebugUnitTest
+```
+
 ## How To Use Multiple Codex Sessions
 
 Use one session per bounded slice:
@@ -51,4 +75,3 @@ The first real milestone is not monetization or advanced monitoring. It is a wor
 4. Caches tasks locally.
 5. Sends a reminder notification after a configured screen-review interval.
 6. Lets the user snooze or mark the reminder as reviewed.
-
