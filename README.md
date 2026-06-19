@@ -22,6 +22,7 @@ V1 should avoid AccessibilityService and forced overlays as default behavior. Th
 - [Project Brief](docs/PROJECT_BRIEF.md)
 - [Product Requirements](docs/PRD.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [Google Sign-In Setup](docs/GOOGLE_SIGN_IN_SETUP.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Backlog](docs/BACKLOG.md)
 - [Development Workflow](docs/DEVELOPMENT_WORKFLOW.md)
