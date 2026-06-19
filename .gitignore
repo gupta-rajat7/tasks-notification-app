@@ -1,5 +1,6 @@
 # Android and Gradle
 .gradle/
+.gradle-home/
 build/
 **/build/
 local.properties
@@ -15,4 +16,4 @@ Thumbs.db
 # Local temporary files
 tmp/
 *.log
-
+*.hprof
