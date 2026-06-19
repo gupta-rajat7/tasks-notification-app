@@ -6,7 +6,10 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.taskreminder.data.repository.TaskCacheSnapshot
+import com.example.taskreminder.settings.TaskReminderSettings
 import com.example.taskreminder.ui.app.TaskReminderRoot
+import com.example.taskreminder.ui.app.TaskReminderApp
 import com.example.taskreminder.ui.theme.TaskReminderTheme
 
 class MainActivity : ComponentActivity() {
@@ -28,6 +31,12 @@ fun TaskReminderHomeScreen(modifier: Modifier = Modifier) {
 @Composable
 private fun TaskReminderHomeScreenPreview() {
     TaskReminderTheme {
-        TaskReminderHomeScreen()
+        TaskReminderApp(
+            settings = TaskReminderSettings(),
+            taskCacheSnapshot = TaskCacheSnapshot(),
+            onReminderIntervalChange = {},
+            onSnoozeMinutesChange = {},
+            onThemeModeChange = {},
+        )
     }
 }

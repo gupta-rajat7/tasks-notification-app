@@ -74,11 +74,11 @@ Run these commands from the repository root after installing JDK 17 and Android 
 Build the debug APK:
 
 ```powershell
-.\gradlew.bat :app:assembleDebug
+.\gradlew.bat --no-daemon --max-workers=1 :app:assembleDebug
 ```
 
 Run JVM unit tests:
 
 ```powershell
-.\gradlew.bat :app:testDebugUnitTest
+.\gradlew.bat --no-daemon --max-workers=1 :app:testDebugUnitTest
 ```
