@@ -13,6 +13,9 @@ Create OAuth clients in Google Cloud for this app:
 
 - Android client for package `com.guptarajat.screenactivetaskreminder`
 - Web client used as the `serverClientId` for Credential Manager
+- Enable the Google Tasks API in the same Google Cloud project.
+- Add the Google Tasks read-only OAuth scope to the consent screen:
+  `https://www.googleapis.com/auth/tasks.readonly`
 
 Put the Web Client ID into:
 
@@ -32,4 +35,6 @@ For local debug OAuth setup, the Android client needs the debug signing certific
 
 ## Next Slice
 
-`SYNC-002` should add Google Tasks authorization and task-list reads. Sign-in authenticates the user's identity; task data access still needs the Google Tasks scope.
+`SYNC-002` adds Google Tasks authorization and read-only task-list reads. Sign-in authenticates the user's identity; task data sync asks for the Google Tasks read-only scope when the user taps `Sync now`.
+
+The app does not store Google access tokens. It asks Google Play services for a short-lived token during sync and stores only the normalized task cache and sync status locally.
