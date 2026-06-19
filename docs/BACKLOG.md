@@ -37,6 +37,17 @@ Acceptance criteria:
 - Theme setting persists.
 - Settings screen can read and write values.
 
+### APP-004: Final App Identity
+
+Replace scaffold placeholder identity with the stable Android app identity needed before Google OAuth and Play Store setup.
+
+Acceptance criteria:
+
+- Android namespace and application ID use the approved production-style package.
+- Kotlin source and test packages match the new app identity.
+- Display name remains user-facing and clear.
+- Architecture docs record the stable package name.
+
 ## P1: Task Sync
 
 ### SYNC-001: Google Sign-In
@@ -132,4 +143,3 @@ Acceptance criteria:
 - Free and Pro feature matrix exists.
 - Upgrade screen mock copy exists.
 - No paid code path is added before approval.
-

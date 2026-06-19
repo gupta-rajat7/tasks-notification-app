@@ -16,11 +16,11 @@ Added the Room-based local task cache foundation. The app now has task list, tas
 
 - `app/build.gradle.kts`
 - `gradle/libs.versions.toml`
-- `app/src/main/java/com/example/taskreminder/MainActivity.kt`
-- `app/src/main/java/com/example/taskreminder/data/local/*`
-- `app/src/main/java/com/example/taskreminder/data/repository/*`
-- `app/src/main/java/com/example/taskreminder/ui/app/TaskReminderApp.kt`
-- `app/src/test/java/com/example/taskreminder/data/repository/TaskCacheMappersTest.kt`
+- `app/src/main/java/com/guptarajat/screenactivetaskreminder/MainActivity.kt`
+- `app/src/main/java/com/guptarajat/screenactivetaskreminder/data/local/*`
+- `app/src/main/java/com/guptarajat/screenactivetaskreminder/data/repository/*`
+- `app/src/main/java/com/guptarajat/screenactivetaskreminder/ui/app/TaskReminderApp.kt`
+- `app/src/test/java/com/guptarajat/screenactivetaskreminder/data/repository/TaskCacheMappersTest.kt`
 - `docs/handoffs/2026-06-19-SYNC-003-room-cache.md`
 
 ## Verification

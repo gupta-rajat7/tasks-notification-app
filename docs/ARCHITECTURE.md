@@ -24,7 +24,7 @@ The app should render from local state first, then sync in the background. The u
 Recommended starting layout inside the Android app module:
 
 ```text
-com.example.taskreminder
+com.guptarajat.screenactivetaskreminder
   app
   auth
   data

@@ -16,11 +16,11 @@ Added DataStore-backed settings for reminder interval, snooze duration, and them
 
 - `app/build.gradle.kts`
 - `gradle/libs.versions.toml`
-- `app/src/main/java/com/example/taskreminder/MainActivity.kt`
-- `app/src/main/java/com/example/taskreminder/settings/SettingsStore.kt`
-- `app/src/main/java/com/example/taskreminder/settings/TaskReminderSettings.kt`
-- `app/src/main/java/com/example/taskreminder/ui/app/TaskReminderApp.kt`
-- `app/src/test/java/com/example/taskreminder/settings/TaskReminderSettingsTest.kt`
+- `app/src/main/java/com/guptarajat/screenactivetaskreminder/MainActivity.kt`
+- `app/src/main/java/com/guptarajat/screenactivetaskreminder/settings/SettingsStore.kt`
+- `app/src/main/java/com/guptarajat/screenactivetaskreminder/settings/TaskReminderSettings.kt`
+- `app/src/main/java/com/guptarajat/screenactivetaskreminder/ui/app/TaskReminderApp.kt`
+- `app/src/test/java/com/guptarajat/screenactivetaskreminder/settings/TaskReminderSettingsTest.kt`
 - `docs/handoffs/2026-06-19-APP-003-settings-store.md`
 
 ## Verification
