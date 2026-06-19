@@ -20,9 +20,9 @@ Run these from the repository root:
 ```powershell
 $env:JAVA_HOME='C:\tmp\task-reminder-dev\jdk\jdk-17.0.19+10'
 $env:ANDROID_SDK_ROOT='C:\tmp\task-reminder-dev\android-sdk'
-$env:GRADLE_USER_HOME='C:\Users\Tanu Gupta\Documents\Tasks Notification App\.gradle-home'
-.\gradlew.bat --no-daemon :app:assembleDebug
-.\gradlew.bat --no-daemon :app:testDebugUnitTest
+$env:GRADLE_USER_HOME='C:\tmp\task-reminder-dev\gradle-home'
+.\gradlew.bat --no-daemon --max-workers=1 :app:assembleDebug
+.\gradlew.bat --no-daemon --max-workers=1 :app:testDebugUnitTest
 ```
 
-Use elevated shell permissions if Gradle reports a loopback connection error.
+Use elevated shell permissions if Gradle reports a loopback connection error. Keep `--max-workers=1` on this Windows setup to avoid Gradle transform-cache move issues.

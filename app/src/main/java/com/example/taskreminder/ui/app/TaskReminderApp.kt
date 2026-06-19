@@ -55,6 +55,10 @@ import com.example.taskreminder.TASKS_ROUTE
 import com.example.taskreminder.TODAY_ROUTE
 import com.example.taskreminder.appName
 import com.example.taskreminder.appSectionForRoute
+import com.example.taskreminder.data.local.CachedTask
+import com.example.taskreminder.data.local.TaskReminderDatabase
+import com.example.taskreminder.data.repository.TaskCacheRepository
+import com.example.taskreminder.data.repository.TaskCacheSnapshot
 import com.example.taskreminder.settings.MAX_REMINDER_INTERVAL_MINUTES
 import com.example.taskreminder.settings.MAX_SNOOZE_MINUTES
 import com.example.taskreminder.settings.MIN_REMINDER_INTERVAL_MINUTES
@@ -80,7 +84,14 @@ private val AppDestinations = listOf(
 fun TaskReminderRoot(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val settingsStore = remember(context) { SettingsStore(context) }
+    val taskCacheRepository = remember(context) {
+        TaskCacheRepository(TaskReminderDatabase.getInstance(context))
+    }
+    val scope = rememberCoroutineScope()
     val settings by settingsStore.settings.collectAsState(initial = TaskReminderSettings())
+    val taskCacheSnapshot by taskCacheRepository.cacheSnapshot.collectAsState(
+        initial = TaskCacheSnapshot(),
+    )
     val systemDarkTheme = isSystemInDarkTheme()
 
     TaskReminderTheme(
@@ -92,7 +103,16 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
     ) {
         TaskReminderApp(
             settings = settings,
-            settingsStore = settingsStore,
+            taskCacheSnapshot = taskCacheSnapshot,
+            onReminderIntervalChange = { value ->
+                scope.launch { settingsStore.setReminderIntervalMinutes(value) }
+            },
+            onSnoozeMinutesChange = { value ->
+                scope.launch { settingsStore.setSnoozeMinutes(value) }
+            },
+            onThemeModeChange = { value ->
+                scope.launch { settingsStore.setThemeMode(value) }
+            },
             modifier = modifier,
         )
     }
@@ -102,12 +122,14 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
 @Composable
 fun TaskReminderApp(
     settings: TaskReminderSettings,
-    settingsStore: SettingsStore,
+    taskCacheSnapshot: TaskCacheSnapshot,
+    onReminderIntervalChange: (Int) -> Unit,
+    onSnoozeMinutesChange: (Int) -> Unit,
+    onThemeModeChange: (ThemeMode) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var selectedRoute by rememberSaveable { mutableStateOf(TODAY_ROUTE) }
     val selectedSection = appSectionForRoute(selectedRoute)
-    val scope = rememberCoroutineScope()
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -153,29 +175,32 @@ fun TaskReminderApp(
             color = MaterialTheme.colorScheme.background,
         ) {
             when (selectedRoute) {
-                TODAY_ROUTE -> TodayScreen(settings = settings)
-                TASKS_ROUTE -> TasksScreen()
+                TODAY_ROUTE -> TodayScreen(
+                    settings = settings,
+                    taskCacheSnapshot = taskCacheSnapshot,
+                )
+                TASKS_ROUTE -> TasksScreen(taskCacheSnapshot = taskCacheSnapshot)
                 SETTINGS_ROUTE -> SettingsScreen(
                     settings = settings,
-                    onReminderIntervalChange = { value ->
-                        scope.launch { settingsStore.setReminderIntervalMinutes(value) }
-                    },
-                    onSnoozeMinutesChange = { value ->
-                        scope.launch { settingsStore.setSnoozeMinutes(value) }
-                    },
-                    onThemeModeChange = { value ->
-                        scope.launch { settingsStore.setThemeMode(value) }
-                    },
+                    onReminderIntervalChange = onReminderIntervalChange,
+                    onSnoozeMinutesChange = onSnoozeMinutesChange,
+                    onThemeModeChange = onThemeModeChange,
                 )
 
-                else -> TodayScreen(settings = settings)
+                else -> TodayScreen(
+                    settings = settings,
+                    taskCacheSnapshot = taskCacheSnapshot,
+                )
             }
         }
     }
 }
 
 @Composable
-private fun TodayScreen(settings: TaskReminderSettings) {
+private fun TodayScreen(
+    settings: TaskReminderSettings,
+    taskCacheSnapshot: TaskCacheSnapshot,
+) {
     AppScreenScaffold(section = appSectionForRoute(TODAY_ROUTE)) {
         ElevatedCard(
             modifier = Modifier.fillMaxWidth(),
@@ -188,12 +213,16 @@ private fun TodayScreen(settings: TaskReminderSettings) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
-                    text = "0 pending tasks",
+                    text = "${taskCacheSnapshot.pendingTaskCount} pending tasks",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold,
                 )
                 Text(
-                    text = "Connect Google Tasks in a later step to show live task counts.",
+                    text = if (taskCacheSnapshot.hasSyncedData) {
+                        "Reading from the local Room cache."
+                    } else {
+                        "Local task cache is ready. Google Tasks sync comes next."
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
@@ -214,18 +243,56 @@ private fun TodayScreen(settings: TaskReminderSettings) {
 }
 
 @Composable
-private fun TasksScreen() {
+private fun TasksScreen(taskCacheSnapshot: TaskCacheSnapshot) {
     AppScreenScaffold(section = appSectionForRoute(TASKS_ROUTE)) {
-        listOf(
-            "Google sign-in is coming next",
-            "Task lists will sync into the local cache",
-            "Offline task viewing will use saved data",
-        ).forEach { item ->
+        if (taskCacheSnapshot.pendingTasks.isEmpty()) {
             ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = item,
+                Column(
                     modifier = Modifier.padding(16.dp),
-                    style = MaterialTheme.typography.bodyLarge,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = "No cached pending tasks",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = "The Room cache is connected. Future Google Tasks sync will write tasks here.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        } else {
+            taskCacheSnapshot.pendingTasks.forEach { task ->
+                CachedTaskCard(task = task)
+            }
+        }
+    }
+}
+
+@Composable
+private fun CachedTaskCard(task: CachedTask) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text(
+                text = task.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = task.taskListTitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            if (!task.notes.isNullOrBlank()) {
+                Text(
+                    text = task.notes,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
