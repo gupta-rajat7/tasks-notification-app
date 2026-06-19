@@ -11,11 +11,18 @@ class AppCopyTest {
     }
 
     @Test
-    fun placeholderNavigationPointsToNextAppShellDestinations() {
-        val navigationDirection = placeholderNavigationDirection()
+    fun appSectionsIncludeBottomNavigationDestinations() {
+        val navigationLabels = appSections().map { it.label }
 
-        assertTrue(navigationDirection.contains("Today"))
-        assertTrue(navigationDirection.contains("Tasks"))
-        assertTrue(navigationDirection.contains("Settings"))
+        assertTrue(navigationLabels.contains("Today"))
+        assertTrue(navigationLabels.contains("Tasks"))
+        assertTrue(navigationLabels.contains("Settings"))
+    }
+
+    @Test
+    fun unknownRouteFallsBackToTodaySection() {
+        val section = appSectionForRoute("missing")
+
+        assertEquals(TODAY_ROUTE, section.route)
     }
 }
