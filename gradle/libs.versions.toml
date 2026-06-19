@@ -10,6 +10,7 @@ junit = "4.13.2"
 kotlin = "2.0.21"
 ksp = "2.0.21-1.0.28"
 lifecycleRuntimeKtx = "2.8.7"
+playServicesAuth = "21.6.0"
 room = "2.8.4"
 
 [libraries]
@@ -30,6 +31,7 @@ androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref =
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleId" }
+play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 junit = { module = "junit:junit", version.ref = "junit" }
 
 [plugins]

@@ -31,6 +31,7 @@ data class TaskCacheSnapshot(
     val pendingTasks: List<CachedTask> = emptyList(),
     val selectedTaskListCount: Int = 0,
     val lastSuccessfulSyncAtMillis: Long? = null,
+    val lastError: String? = null,
 ) {
     val pendingTaskCount: Int
         get() = pendingTasks.size

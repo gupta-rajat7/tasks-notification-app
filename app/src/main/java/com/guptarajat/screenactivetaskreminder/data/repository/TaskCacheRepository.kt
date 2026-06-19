@@ -21,6 +21,7 @@ class TaskCacheRepository(
             pendingTasks = pendingTasks,
             selectedTaskListCount = selectedTaskListCount,
             lastSuccessfulSyncAtMillis = syncState?.lastSuccessfulSyncAtMillis,
+            lastError = syncState?.lastError,
         )
     }
 
@@ -42,5 +43,20 @@ class TaskCacheRepository(
                 ),
             )
         }
+    }
+
+    suspend fun recordSyncError(
+        accountId: String = DEFAULT_ACCOUNT_ID,
+        message: String,
+    ) {
+        val existingState = database.syncStateDao().getSyncState(accountId)
+        database.syncStateDao().upsertSyncState(
+            SyncStateEntity(
+                accountId = accountId,
+                lastFullSyncAtMillis = existingState?.lastFullSyncAtMillis,
+                lastSuccessfulSyncAtMillis = existingState?.lastSuccessfulSyncAtMillis,
+                lastError = message,
+            ),
+        )
     }
 }

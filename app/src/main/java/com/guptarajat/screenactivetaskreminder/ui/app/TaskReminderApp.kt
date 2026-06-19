@@ -3,6 +3,9 @@ package com.guptarajat.screenactivetaskreminder.ui.app
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +17,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
@@ -22,6 +27,7 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
@@ -70,6 +76,8 @@ import com.guptarajat.screenactivetaskreminder.auth.GoogleSignInResult
 import com.guptarajat.screenactivetaskreminder.auth.userMessage
 import com.guptarajat.screenactivetaskreminder.data.local.CachedTask
 import com.guptarajat.screenactivetaskreminder.data.local.TaskReminderDatabase
+import com.guptarajat.screenactivetaskreminder.data.remote.GoogleTasksApiClient
+import com.guptarajat.screenactivetaskreminder.data.remote.GoogleTasksFetchResult
 import com.guptarajat.screenactivetaskreminder.data.repository.TaskCacheRepository
 import com.guptarajat.screenactivetaskreminder.data.repository.TaskCacheSnapshot
 import com.guptarajat.screenactivetaskreminder.settings.MAX_REMINDER_INTERVAL_MINUTES
@@ -79,6 +87,9 @@ import com.guptarajat.screenactivetaskreminder.settings.MIN_SNOOZE_MINUTES
 import com.guptarajat.screenactivetaskreminder.settings.SettingsStore
 import com.guptarajat.screenactivetaskreminder.settings.TaskReminderSettings
 import com.guptarajat.screenactivetaskreminder.settings.ThemeMode
+import com.guptarajat.screenactivetaskreminder.sync.GoogleTasksAuthorizationClient
+import com.guptarajat.screenactivetaskreminder.sync.GoogleTasksAuthorizationResult
+import com.guptarajat.screenactivetaskreminder.sync.userMessage as googleTasksAuthorizationUserMessage
 import com.guptarajat.screenactivetaskreminder.ui.theme.TaskReminderTheme
 import kotlinx.coroutines.launch
 
@@ -106,6 +117,10 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
             ),
         )
     }
+    val googleTasksAuthorizationClient = remember(context) {
+        GoogleTasksAuthorizationClient(context)
+    }
+    val googleTasksApiClient = remember { GoogleTasksApiClient() }
     val taskCacheRepository = remember(context) {
         TaskCacheRepository(TaskReminderDatabase.getInstance(context))
     }
@@ -118,6 +133,66 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
     val systemDarkTheme = isSystemInDarkTheme()
     var authStatusMessage by rememberSaveable { mutableStateOf<String?>(null) }
     var isAuthActionInProgress by rememberSaveable { mutableStateOf(false) }
+    var syncStatusMessage by rememberSaveable { mutableStateOf<String?>(null) }
+    var isTaskSyncInProgress by rememberSaveable { mutableStateOf(false) }
+    var pendingSyncAccountId by rememberSaveable { mutableStateOf<String?>(null) }
+
+    fun syncGoogleTasks(accessToken: String, accountId: String?) {
+        scope.launch {
+            val resolvedAccountId = accountId?.takeIf { it.isNotBlank() } ?: "primary"
+            when (val result = googleTasksApiClient.fetchTaskCache(accessToken)) {
+                is GoogleTasksFetchResult.Success -> {
+                    taskCacheRepository.replaceCache(
+                        fetchedCache = result.cache,
+                        accountId = resolvedAccountId,
+                    )
+                    syncStatusMessage =
+                        "Synced ${result.cache.tasks.size} pending tasks from ${result.cache.taskLists.size} lists."
+                }
+
+                is GoogleTasksFetchResult.Failure -> {
+                    taskCacheRepository.recordSyncError(
+                        accountId = resolvedAccountId,
+                        message = result.message,
+                    )
+                    syncStatusMessage = result.message
+                }
+            }
+            isTaskSyncInProgress = false
+            pendingSyncAccountId = null
+        }
+    }
+
+    val tasksAuthorizationLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult(),
+    ) { activityResult ->
+        if (activityResult.resultCode != Activity.RESULT_OK) {
+            syncStatusMessage = "Google Tasks permission was cancelled."
+            isTaskSyncInProgress = false
+            pendingSyncAccountId = null
+            return@rememberLauncherForActivityResult
+        }
+
+        when (
+            val authorizationResult =
+                googleTasksAuthorizationClient.readAuthorizationResult(activityResult.data)
+        ) {
+            is GoogleTasksAuthorizationResult.Authorized -> {
+                syncGoogleTasks(
+                    accessToken = authorizationResult.accessToken,
+                    accountId = pendingSyncAccountId ?: authSession.accountId,
+                )
+            }
+
+            else -> {
+                syncStatusMessage =
+                    authorizationResult.googleTasksAuthorizationUserMessage()
+                        ?: "Google Tasks permission was not granted."
+                isTaskSyncInProgress = false
+                pendingSyncAccountId = null
+            }
+        }
+    }
 
     TaskReminderTheme(
         darkTheme = when (settings.themeMode) {
@@ -132,6 +207,8 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
             authStatusMessage = authStatusMessage,
             isAuthActionInProgress = isAuthActionInProgress,
             taskCacheSnapshot = taskCacheSnapshot,
+            syncStatusMessage = syncStatusMessage,
+            isTaskSyncInProgress = isTaskSyncInProgress,
             onGoogleSignInClick = {
                 val activity = context.findActivity()
                 if (activity == null) {
@@ -161,8 +238,61 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
                     isAuthActionInProgress = false
                 }
             },
+            onGoogleTasksSyncClick = {
+                if (!authSession.isSignedIn) {
+                    syncStatusMessage = "Sign in with Google before syncing tasks."
+                } else {
+                    val activity = context.findActivity()
+                    if (activity == null) {
+                        syncStatusMessage = "Task sync needs an active Android screen."
+                    } else {
+                        scope.launch {
+                            isTaskSyncInProgress = true
+                            syncStatusMessage = null
+                            pendingSyncAccountId = authSession.accountId
+                            when (
+                                val authorizationResult =
+                                    googleTasksAuthorizationClient.requestAccess(activity)
+                            ) {
+                                is GoogleTasksAuthorizationResult.Authorized -> {
+                                    syncGoogleTasks(
+                                        accessToken = authorizationResult.accessToken,
+                                        accountId = authSession.accountId,
+                                    )
+                                }
+
+                                is GoogleTasksAuthorizationResult.NeedsUserConsent -> {
+                                    val request = IntentSenderRequest.Builder(
+                                        authorizationResult.pendingIntent.intentSender,
+                                    ).build()
+                                    runCatching {
+                                        tasksAuthorizationLauncher.launch(request)
+                                    }.onFailure { error ->
+                                        syncStatusMessage =
+                                            error.localizedMessage
+                                                ?: "Google Tasks permission screen could not open."
+                                        isTaskSyncInProgress = false
+                                        pendingSyncAccountId = null
+                                    }
+                                }
+
+                                else -> {
+                                    syncStatusMessage =
+                                        authorizationResult.googleTasksAuthorizationUserMessage()
+                                            ?: "Google Tasks permission was not granted."
+                                    isTaskSyncInProgress = false
+                                    pendingSyncAccountId = null
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             onDismissAuthStatus = {
                 authStatusMessage = null
+            },
+            onDismissSyncStatus = {
+                syncStatusMessage = null
             },
             onReminderIntervalChange = { value ->
                 scope.launch { settingsStore.setReminderIntervalMinutes(value) }
@@ -186,9 +316,13 @@ fun TaskReminderApp(
     authStatusMessage: String?,
     isAuthActionInProgress: Boolean,
     taskCacheSnapshot: TaskCacheSnapshot,
+    syncStatusMessage: String?,
+    isTaskSyncInProgress: Boolean,
     onGoogleSignInClick: () -> Unit,
     onGoogleSignOutClick: () -> Unit,
+    onGoogleTasksSyncClick: () -> Unit,
     onDismissAuthStatus: () -> Unit,
+    onDismissSyncStatus: () -> Unit,
     onReminderIntervalChange: (Int) -> Unit,
     onSnoozeMinutesChange: (Int) -> Unit,
     onThemeModeChange: (ThemeMode) -> Unit,
@@ -245,7 +379,14 @@ fun TaskReminderApp(
                     settings = settings,
                     taskCacheSnapshot = taskCacheSnapshot,
                 )
-                TASKS_ROUTE -> TasksScreen(taskCacheSnapshot = taskCacheSnapshot)
+                TASKS_ROUTE -> TasksScreen(
+                    taskCacheSnapshot = taskCacheSnapshot,
+                    authSession = authSession,
+                    syncStatusMessage = syncStatusMessage,
+                    isTaskSyncInProgress = isTaskSyncInProgress,
+                    onGoogleTasksSyncClick = onGoogleTasksSyncClick,
+                    onDismissSyncStatus = onDismissSyncStatus,
+                )
                 SETTINGS_ROUTE -> SettingsScreen(
                     settings = settings,
                     authSession = authSession,
@@ -293,7 +434,7 @@ private fun TodayScreen(
                     text = if (taskCacheSnapshot.hasSyncedData) {
                         "Reading from the local Room cache."
                     } else {
-                        "Local task cache is ready. Google Tasks sync comes next."
+                        "Sync Google Tasks to fill the local cache."
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -315,8 +456,24 @@ private fun TodayScreen(
 }
 
 @Composable
-private fun TasksScreen(taskCacheSnapshot: TaskCacheSnapshot) {
+private fun TasksScreen(
+    taskCacheSnapshot: TaskCacheSnapshot,
+    authSession: AuthSession,
+    syncStatusMessage: String?,
+    isTaskSyncInProgress: Boolean,
+    onGoogleTasksSyncClick: () -> Unit,
+    onDismissSyncStatus: () -> Unit,
+) {
     AppScreenScaffold(section = appSectionForRoute(TASKS_ROUTE)) {
+        GoogleTasksSyncCard(
+            taskCacheSnapshot = taskCacheSnapshot,
+            authSession = authSession,
+            syncStatusMessage = syncStatusMessage,
+            isTaskSyncInProgress = isTaskSyncInProgress,
+            onGoogleTasksSyncClick = onGoogleTasksSyncClick,
+            onDismissSyncStatus = onDismissSyncStatus,
+        )
+
         if (taskCacheSnapshot.pendingTasks.isEmpty()) {
             ElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(
@@ -329,7 +486,7 @@ private fun TasksScreen(taskCacheSnapshot: TaskCacheSnapshot) {
                         fontWeight = FontWeight.SemiBold,
                     )
                     Text(
-                        text = "The Room cache is connected. Future Google Tasks sync will write tasks here.",
+                        text = "Tap Sync now after signing in to bring active Google Tasks here.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -338,6 +495,76 @@ private fun TasksScreen(taskCacheSnapshot: TaskCacheSnapshot) {
         } else {
             taskCacheSnapshot.pendingTasks.forEach { task ->
                 CachedTaskCard(task = task)
+            }
+        }
+    }
+}
+
+@Composable
+private fun GoogleTasksSyncCard(
+    taskCacheSnapshot: TaskCacheSnapshot,
+    authSession: AuthSession,
+    syncStatusMessage: String?,
+    isTaskSyncInProgress: Boolean,
+    onGoogleTasksSyncClick: () -> Unit,
+    onDismissSyncStatus: () -> Unit,
+) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = "Google Tasks sync",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = if (authSession.isSignedIn) {
+                    "Signed in as ${authSession.displayLabel}. Sync uses read-only Google Tasks access."
+                } else {
+                    "Sign in with Google in Settings before syncing tasks."
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            if (!syncStatusMessage.isNullOrBlank()) {
+                ListItem(
+                    headlineContent = { Text(syncStatusMessage) },
+                    trailingContent = {
+                        OutlinedButton(onClick = onDismissSyncStatus) {
+                            Text("Dismiss")
+                        }
+                    },
+                )
+            } else if (!taskCacheSnapshot.lastError.isNullOrBlank()) {
+                Text(
+                    text = "Last sync issue: ${taskCacheSnapshot.lastError}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Button(
+                    onClick = onGoogleTasksSyncClick,
+                    enabled = authSession.isSignedIn && !isTaskSyncInProgress,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Sync,
+                        contentDescription = null,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Sync now")
+                }
+
+                if (isTaskSyncInProgress) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                }
             }
         }
     }
