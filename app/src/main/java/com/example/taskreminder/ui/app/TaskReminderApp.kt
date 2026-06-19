@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.List
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CardDefaults
@@ -51,7 +51,7 @@ private data class AppDestination(
 
 private val AppDestinations = listOf(
     AppDestination(appSectionForRoute(TODAY_ROUTE), Icons.Outlined.CheckCircle),
-    AppDestination(appSectionForRoute(TASKS_ROUTE), Icons.Outlined.List),
+    AppDestination(appSectionForRoute(TASKS_ROUTE), Icons.AutoMirrored.Outlined.List),
     AppDestination(appSectionForRoute(SETTINGS_ROUTE), Icons.Outlined.Settings),
 )
 

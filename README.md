@@ -25,6 +25,7 @@ V1 should avoid AccessibilityService and forced overlays as default behavior. Th
 - [Roadmap](docs/ROADMAP.md)
 - [Backlog](docs/BACKLOG.md)
 - [Development Workflow](docs/DEVELOPMENT_WORKFLOW.md)
+- [Local Android Build Setup](docs/LOCAL_ANDROID_SETUP.md)
 - [QA Plan](docs/QA_PLAN.md)
 - [Risk Register](docs/RISKS.md)
 - [Session Handoff Template](docs/SESSION_HANDOFF_TEMPLATE.md)
