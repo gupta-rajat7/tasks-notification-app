@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.guptarajat.screenactivetaskreminder.auth.AuthSession
 import com.guptarajat.screenactivetaskreminder.data.repository.TaskCacheSnapshot
 import com.guptarajat.screenactivetaskreminder.settings.TaskReminderSettings
 import com.guptarajat.screenactivetaskreminder.ui.app.TaskReminderRoot
@@ -33,7 +34,13 @@ private fun TaskReminderHomeScreenPreview() {
     TaskReminderTheme {
         TaskReminderApp(
             settings = TaskReminderSettings(),
+            authSession = AuthSession(),
+            authStatusMessage = null,
+            isAuthActionInProgress = false,
             taskCacheSnapshot = TaskCacheSnapshot(),
+            onGoogleSignInClick = {},
+            onGoogleSignOutClick = {},
+            onDismissAuthStatus = {},
             onReminderIntervalChange = {},
             onSnoozeMinutesChange = {},
             onThemeModeChange = {},
