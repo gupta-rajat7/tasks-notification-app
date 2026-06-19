@@ -10,11 +10,13 @@ Deliverables:
 - Android project scaffold.
 - Build command documented.
 - Basic CI or local quality commands documented.
+- Windows owner testing guide.
 
 Exit criteria:
 
 - A fresh Codex session can read the docs and know what to build next.
 - Android project builds.
+- Product owner can run the app locally with documented steps.
 
 ## Phase 1: App Shell
 
@@ -78,6 +80,7 @@ Goal: Prepare for real-user testing.
 Deliverables:
 
 - Onboarding copy.
+- Lightweight UI/UX plan.
 - Error states.
 - Permission recovery UI.
 - Basic manual QA pass.
@@ -105,4 +108,3 @@ Exit criteria:
 - Free app remains useful.
 - Pro features are clearly incremental.
 - No ad SDK is introduced.
-

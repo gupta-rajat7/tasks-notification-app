@@ -19,6 +19,15 @@ The app should render from local state first, then sync in the background. The u
 - Google Tasks API.
 - Android notifications.
 
+## Android Platform Target
+
+- Minimum SDK: 26.
+- Compile SDK: 36.
+- Target SDK: 36.
+- Build baseline: JDK 17, Gradle 8.13, Android Gradle Plugin 8.13.x.
+
+The project should stay compatible with current Google Play target API expectations and should be rechecked whenever Android or Play Store requirements change.
+
 ## Package Layout
 
 Recommended starting layout inside the Android app module:

@@ -46,8 +46,9 @@ A slice is done when:
 5. SYNC-001.
 6. SYNC-002.
 7. REM-001.
-8. REM-002.
-9. UX-001.
+8. INFRA-001.
+9. REM-002.
+10. UX-001.
 
 Reason: build the local app shell and state model before adding Google API complexity.
 
@@ -69,7 +70,7 @@ Reason: build the local app shell and state model before adding Google API compl
 
 ## Android Build Commands
 
-Run these commands from the repository root after installing JDK 17 and Android SDK Platform 35.
+Run these commands from the repository root after installing JDK 17 and Android SDK Platform 36.
 
 Build the debug APK:
 
@@ -82,3 +83,5 @@ Run JVM unit tests:
 ```powershell
 .\gradlew.bat --no-daemon --max-workers=1 :app:testDebugUnitTest
 ```
+
+On this Windows machine, use the local portable toolchain documented in `docs/LOCAL_ANDROID_SETUP.md`.

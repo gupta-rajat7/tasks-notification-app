@@ -4,6 +4,19 @@ Backlog IDs are stable handles for Codex sessions. A session should claim one sm
 
 ## P0: Project Foundation
 
+### INFRA-001: Android 16 Readiness And PO Test Guides
+
+Prepare the app and project documents for Android 16 local development and first-owner testing.
+
+Acceptance criteria:
+
+- App build config targets Android SDK 36.
+- Gradle and Android Gradle Plugin versions are compatible with SDK 36.
+- Local Windows build commands are documented.
+- Product owner can follow a step-by-step Windows/emulator test guide.
+- Google Play Store release preparation steps are documented.
+- Lightweight UI/UX planning is documented.
+
 ### APP-001: Scaffold Android Project
 
 Create a native Android project using Kotlin, Compose, and Material 3.
