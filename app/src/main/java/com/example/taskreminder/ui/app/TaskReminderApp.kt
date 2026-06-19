@@ -1,6 +1,7 @@
 package com.example.taskreminder.ui.app
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,15 +12,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.List
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -29,11 +35,17 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -43,6 +55,15 @@ import com.example.taskreminder.TASKS_ROUTE
 import com.example.taskreminder.TODAY_ROUTE
 import com.example.taskreminder.appName
 import com.example.taskreminder.appSectionForRoute
+import com.example.taskreminder.settings.MAX_REMINDER_INTERVAL_MINUTES
+import com.example.taskreminder.settings.MAX_SNOOZE_MINUTES
+import com.example.taskreminder.settings.MIN_REMINDER_INTERVAL_MINUTES
+import com.example.taskreminder.settings.MIN_SNOOZE_MINUTES
+import com.example.taskreminder.settings.SettingsStore
+import com.example.taskreminder.settings.TaskReminderSettings
+import com.example.taskreminder.settings.ThemeMode
+import com.example.taskreminder.ui.theme.TaskReminderTheme
+import kotlinx.coroutines.launch
 
 private data class AppDestination(
     val section: AppSectionCopy,
@@ -55,11 +76,38 @@ private val AppDestinations = listOf(
     AppDestination(appSectionForRoute(SETTINGS_ROUTE), Icons.Outlined.Settings),
 )
 
+@Composable
+fun TaskReminderRoot(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val settingsStore = remember(context) { SettingsStore(context) }
+    val settings by settingsStore.settings.collectAsState(initial = TaskReminderSettings())
+    val systemDarkTheme = isSystemInDarkTheme()
+
+    TaskReminderTheme(
+        darkTheme = when (settings.themeMode) {
+            ThemeMode.SYSTEM -> systemDarkTheme
+            ThemeMode.LIGHT -> false
+            ThemeMode.DARK -> true
+        },
+    ) {
+        TaskReminderApp(
+            settings = settings,
+            settingsStore = settingsStore,
+            modifier = modifier,
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskReminderApp(modifier: Modifier = Modifier) {
+fun TaskReminderApp(
+    settings: TaskReminderSettings,
+    settingsStore: SettingsStore,
+    modifier: Modifier = Modifier,
+) {
     var selectedRoute by rememberSaveable { mutableStateOf(TODAY_ROUTE) }
     val selectedSection = appSectionForRoute(selectedRoute)
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -105,17 +153,29 @@ fun TaskReminderApp(modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.background,
         ) {
             when (selectedRoute) {
-                TODAY_ROUTE -> TodayScreen()
+                TODAY_ROUTE -> TodayScreen(settings = settings)
                 TASKS_ROUTE -> TasksScreen()
-                SETTINGS_ROUTE -> SettingsScreen()
-                else -> TodayScreen()
+                SETTINGS_ROUTE -> SettingsScreen(
+                    settings = settings,
+                    onReminderIntervalChange = { value ->
+                        scope.launch { settingsStore.setReminderIntervalMinutes(value) }
+                    },
+                    onSnoozeMinutesChange = { value ->
+                        scope.launch { settingsStore.setSnoozeMinutes(value) }
+                    },
+                    onThemeModeChange = { value ->
+                        scope.launch { settingsStore.setThemeMode(value) }
+                    },
+                )
+
+                else -> TodayScreen(settings = settings)
             }
         }
     }
 }
 
 @Composable
-private fun TodayScreen() {
+private fun TodayScreen(settings: TaskReminderSettings) {
     AppScreenScaffold(section = appSectionForRoute(TODAY_ROUTE)) {
         ElevatedCard(
             modifier = Modifier.fillMaxWidth(),
@@ -141,8 +201,14 @@ private fun TodayScreen() {
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AssistChip(onClick = {}, label = { Text("Review") })
-            AssistChip(onClick = {}, label = { Text("Snooze") })
+            AssistChip(
+                onClick = {},
+                label = { Text("Review every ${settings.reminderIntervalMinutes} min") },
+            )
+            AssistChip(
+                onClick = {},
+                label = { Text("Snooze ${settings.snoozeMinutes} min") },
+            )
         }
     }
 }
@@ -167,26 +233,110 @@ private fun TasksScreen() {
 }
 
 @Composable
-private fun SettingsScreen() {
-    val rows = listOf(
-        "Reminder interval" to "Default: 10 minutes",
-        "Snooze duration" to "Default: 30 minutes",
-        "Quiet hours" to "Off",
-        "Theme" to "System default",
-    )
-
+private fun SettingsScreen(
+    settings: TaskReminderSettings,
+    onReminderIntervalChange: (Int) -> Unit,
+    onSnoozeMinutesChange: (Int) -> Unit,
+    onThemeModeChange: (ThemeMode) -> Unit,
+) {
     AppScreenScaffold(section = appSectionForRoute(SETTINGS_ROUTE)) {
         ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-            Column {
-                rows.forEach { (title, supportingText) ->
-                    ListItem(
-                        headlineContent = { Text(title) },
-                        supportingContent = { Text(supportingText) },
-                    )
-                }
+            Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                StepperSetting(
+                    title = "Reminder interval",
+                    valueText = "${settings.reminderIntervalMinutes} minutes",
+                    canDecrease = settings.reminderIntervalMinutes > MIN_REMINDER_INTERVAL_MINUTES,
+                    canIncrease = settings.reminderIntervalMinutes < MAX_REMINDER_INTERVAL_MINUTES,
+                    onDecrease = {
+                        onReminderIntervalChange(settings.reminderIntervalMinutes - 5)
+                    },
+                    onIncrease = {
+                        onReminderIntervalChange(settings.reminderIntervalMinutes + 5)
+                    },
+                )
+                StepperSetting(
+                    title = "Snooze duration",
+                    valueText = "${settings.snoozeMinutes} minutes",
+                    canDecrease = settings.snoozeMinutes > MIN_SNOOZE_MINUTES,
+                    canIncrease = settings.snoozeMinutes < MAX_SNOOZE_MINUTES,
+                    onDecrease = {
+                        onSnoozeMinutesChange(settings.snoozeMinutes - 5)
+                    },
+                    onIncrease = {
+                        onSnoozeMinutesChange(settings.snoozeMinutes + 5)
+                    },
+                )
+                ThemeSetting(
+                    selectedThemeMode = settings.themeMode,
+                    onThemeModeChange = onThemeModeChange,
+                )
             }
         }
     }
+}
+
+@Composable
+private fun StepperSetting(
+    title: String,
+    valueText: String,
+    canDecrease: Boolean,
+    canIncrease: Boolean,
+    onDecrease: () -> Unit,
+    onIncrease: () -> Unit,
+) {
+    ListItem(
+        headlineContent = { Text(title) },
+        supportingContent = { Text(valueText) },
+        trailingContent = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                IconButton(
+                    onClick = onDecrease,
+                    enabled = canDecrease,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Remove,
+                        contentDescription = "Decrease $title",
+                    )
+                }
+                IconButton(
+                    onClick = onIncrease,
+                    enabled = canIncrease,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Add,
+                        contentDescription = "Increase $title",
+                    )
+                }
+            }
+        },
+    )
+}
+
+@Composable
+private fun ThemeSetting(
+    selectedThemeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
+) {
+    ListItem(
+        headlineContent = { Text("Theme") },
+        supportingContent = {
+            Row(
+                modifier = Modifier.selectableGroup(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                ThemeMode.entries.forEach { themeMode ->
+                    FilterChip(
+                        selected = selectedThemeMode == themeMode,
+                        onClick = { onThemeModeChange(themeMode) },
+                        label = { Text(themeMode.label) },
+                    )
+                }
+            }
+        },
+    )
 }
 
 @Composable
@@ -219,6 +369,9 @@ private fun AppScreenScaffold(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 content = content,
             )
+        }
+        item {
+            Box(modifier = Modifier.height(1.dp))
         }
     }
 }
