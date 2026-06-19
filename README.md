@@ -1,0 +1,54 @@
+# Screen Active Task Reminder
+
+Android productivity app that reminds users to review pending tasks when they have been screen-active for a configurable period.
+
+The project is intentionally local-first, lightweight, and beginner-friendly:
+
+- Native Android app using Kotlin, Jetpack Compose, and Material 3.
+- Google Tasks as the task source of truth.
+- Room cache for fast local reads.
+- DataStore for user settings.
+- Notification-first reminder experience for V1.
+- No paid backend, subscriptions, licenses, or hosted infrastructure required for development.
+
+## Current Product Direction
+
+Build a free V1 that proves users want the behavior, then add a one-time Pro upgrade for advanced settings. Do not start with ads. Ads conflict with the product promise of reducing distraction.
+
+V1 should avoid AccessibilityService and forced overlays as default behavior. Those can be evaluated later as optional advanced features because they increase onboarding friction, privacy concerns, and store-policy risk.
+
+## Project Docs
+
+- [Project Brief](docs/PROJECT_BRIEF.md)
+- [Product Requirements](docs/PRD.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Backlog](docs/BACKLOG.md)
+- [Development Workflow](docs/DEVELOPMENT_WORKFLOW.md)
+- [QA Plan](docs/QA_PLAN.md)
+- [Risk Register](docs/RISKS.md)
+- [Session Handoff Template](docs/SESSION_HANDOFF_TEMPLATE.md)
+- [Architecture Decision Records](docs/adr/)
+
+## How To Use Multiple Codex Sessions
+
+Use one session per bounded slice:
+
+- Session A: Android scaffold and build system.
+- Session B: Product docs and onboarding UX copy.
+- Session C: Google Tasks sync and local data model.
+- Session D: Reminder engine, notifications, and settings.
+
+Each session should read `docs/DEVELOPMENT_WORKFLOW.md`, pick a backlog item from `docs/BACKLOG.md`, work in a separate branch, and leave a handoff note using `docs/SESSION_HANDOFF_TEMPLATE.md`.
+
+## First Build Milestone
+
+The first real milestone is not monetization or advanced monitoring. It is a working Android app that:
+
+1. Opens to a simple task dashboard.
+2. Lets the user sign in with Google.
+3. Reads Google Tasks.
+4. Caches tasks locally.
+5. Sends a reminder notification after a configured screen-review interval.
+6. Lets the user snooze or mark the reminder as reviewed.
+
