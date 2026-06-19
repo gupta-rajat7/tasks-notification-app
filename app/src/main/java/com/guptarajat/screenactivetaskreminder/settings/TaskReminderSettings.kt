@@ -11,6 +11,8 @@ data class TaskReminderSettings(
     val reminderIntervalMinutes: Int = DEFAULT_REMINDER_INTERVAL_MINUTES,
     val snoozeMinutes: Int = DEFAULT_SNOOZE_MINUTES,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val lastReviewedAtMillis: Long? = null,
+    val snoozedUntilMillis: Long? = null,
 )
 
 enum class ThemeMode(

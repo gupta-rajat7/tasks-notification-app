@@ -108,12 +108,22 @@ com.guptarajat.screenactivetaskreminder
 
 ### Reminder Decision Flow
 
-1. Timer or scheduled check runs.
+1. Reminder check runs from the Today screen test action.
 2. App reads settings from DataStore.
 3. App checks quiet hours and snooze state.
 4. App queries Room for pending tasks.
 5. App checks last review time.
 6. App posts notification if all rules pass.
+
+`ReminderRules` stays pure Kotlin. Android-specific notification work lives in `ReminderNotificationCoordinator`, and notification actions are handled by `ReminderNotificationActionReceiver`.
+
+Current V1 notification actions:
+
+- Review opens the app.
+- Snooze stores `snoozedUntilMillis` in DataStore and cancels the visible notification.
+- Done for now stores `lastReviewedAtMillis` in DataStore and cancels the visible notification.
+
+Automatic background scheduling is still a future reminder-engine slice.
 
 ### Sync Flow
 

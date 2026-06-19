@@ -11,6 +11,8 @@ class TaskReminderSettingsTest {
         assertEquals(10, settings.reminderIntervalMinutes)
         assertEquals(30, settings.snoozeMinutes)
         assertEquals(ThemeMode.SYSTEM, settings.themeMode)
+        assertEquals(null, settings.lastReviewedAtMillis)
+        assertEquals(null, settings.snoozedUntilMillis)
     }
 
     @Test

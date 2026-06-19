@@ -1,8 +1,11 @@
 package com.guptarajat.screenactivetaskreminder.ui.app
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Sync
@@ -47,6 +51,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -61,6 +66,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.guptarajat.screenactivetaskreminder.R
 import com.guptarajat.screenactivetaskreminder.AppSectionCopy
 import com.guptarajat.screenactivetaskreminder.SETTINGS_ROUTE
@@ -80,6 +86,9 @@ import com.guptarajat.screenactivetaskreminder.data.remote.GoogleTasksApiClient
 import com.guptarajat.screenactivetaskreminder.data.remote.GoogleTasksFetchResult
 import com.guptarajat.screenactivetaskreminder.data.repository.TaskCacheRepository
 import com.guptarajat.screenactivetaskreminder.data.repository.TaskCacheSnapshot
+import com.guptarajat.screenactivetaskreminder.reminders.ReminderNotificationCoordinator
+import com.guptarajat.screenactivetaskreminder.reminders.reminderNotificationStatusMessage
+import com.guptarajat.screenactivetaskreminder.reminders.snoozeUntilMillis
 import com.guptarajat.screenactivetaskreminder.settings.MAX_REMINDER_INTERVAL_MINUTES
 import com.guptarajat.screenactivetaskreminder.settings.MAX_SNOOZE_MINUTES
 import com.guptarajat.screenactivetaskreminder.settings.MIN_REMINDER_INTERVAL_MINUTES
@@ -136,6 +145,26 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
     var syncStatusMessage by rememberSaveable { mutableStateOf<String?>(null) }
     var isTaskSyncInProgress by rememberSaveable { mutableStateOf(false) }
     var pendingSyncAccountId by rememberSaveable { mutableStateOf<String?>(null) }
+    var reminderStatusMessage by rememberSaveable { mutableStateOf<String?>(null) }
+    var areNotificationsAllowed by rememberSaveable {
+        mutableStateOf(ReminderNotificationCoordinator.areNotificationsEnabled(context))
+    }
+
+    LaunchedEffect(context) {
+        ReminderNotificationCoordinator.ensureNotificationChannel(context)
+        areNotificationsAllowed = ReminderNotificationCoordinator.areNotificationsEnabled(context)
+    }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { isGranted ->
+        areNotificationsAllowed = ReminderNotificationCoordinator.areNotificationsEnabled(context)
+        reminderStatusMessage = if (isGranted || areNotificationsAllowed) {
+            "Notifications are enabled."
+        } else {
+            "Notifications were not enabled."
+        }
+    }
 
     fun syncGoogleTasks(accessToken: String, accountId: String?) {
         scope.launch {
@@ -294,6 +323,57 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
             onDismissSyncStatus = {
                 syncStatusMessage = null
             },
+            reminderStatusMessage = reminderStatusMessage,
+            areNotificationsAllowed = areNotificationsAllowed,
+            onDismissReminderStatus = {
+                reminderStatusMessage = null
+            },
+            onEnableNotificationsClick = {
+                if (
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.POST_NOTIFICATIONS,
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    areNotificationsAllowed =
+                        ReminderNotificationCoordinator.areNotificationsEnabled(context)
+                    reminderStatusMessage = if (areNotificationsAllowed) {
+                        "Notifications are enabled."
+                    } else {
+                        "Enable notifications in Android settings to receive reminders."
+                    }
+                }
+            },
+            onCheckReminderNowClick = {
+                scope.launch {
+                    val result = ReminderNotificationCoordinator.evaluateAndNotify(context)
+                    areNotificationsAllowed =
+                        ReminderNotificationCoordinator.areNotificationsEnabled(context)
+                    reminderStatusMessage = reminderNotificationStatusMessage(result)
+                }
+            },
+            onReviewNowClick = {
+                scope.launch {
+                    settingsStore.recordReview(System.currentTimeMillis())
+                    ReminderNotificationCoordinator.cancel(context)
+                    reminderStatusMessage = "Review recorded."
+                }
+            },
+            onSnoozeReminderClick = {
+                scope.launch {
+                    settingsStore.snoozeUntil(
+                        snoozeUntilMillis(
+                            nowMillis = System.currentTimeMillis(),
+                            snoozeMinutes = settings.snoozeMinutes,
+                        ),
+                    )
+                    ReminderNotificationCoordinator.cancel(context)
+                    reminderStatusMessage = "Reminders snoozed for ${settings.snoozeMinutes} minutes."
+                }
+            },
             onReminderIntervalChange = { value ->
                 scope.launch { settingsStore.setReminderIntervalMinutes(value) }
             },
@@ -323,6 +403,13 @@ fun TaskReminderApp(
     onGoogleTasksSyncClick: () -> Unit,
     onDismissAuthStatus: () -> Unit,
     onDismissSyncStatus: () -> Unit,
+    reminderStatusMessage: String?,
+    areNotificationsAllowed: Boolean,
+    onDismissReminderStatus: () -> Unit,
+    onEnableNotificationsClick: () -> Unit,
+    onCheckReminderNowClick: () -> Unit,
+    onReviewNowClick: () -> Unit,
+    onSnoozeReminderClick: () -> Unit,
     onReminderIntervalChange: (Int) -> Unit,
     onSnoozeMinutesChange: (Int) -> Unit,
     onThemeModeChange: (ThemeMode) -> Unit,
@@ -378,6 +465,13 @@ fun TaskReminderApp(
                 TODAY_ROUTE -> TodayScreen(
                     settings = settings,
                     taskCacheSnapshot = taskCacheSnapshot,
+                    reminderStatusMessage = reminderStatusMessage,
+                    areNotificationsAllowed = areNotificationsAllowed,
+                    onDismissReminderStatus = onDismissReminderStatus,
+                    onEnableNotificationsClick = onEnableNotificationsClick,
+                    onCheckReminderNowClick = onCheckReminderNowClick,
+                    onReviewNowClick = onReviewNowClick,
+                    onSnoozeReminderClick = onSnoozeReminderClick,
                 )
                 TASKS_ROUTE -> TasksScreen(
                     taskCacheSnapshot = taskCacheSnapshot,
@@ -403,6 +497,13 @@ fun TaskReminderApp(
                 else -> TodayScreen(
                     settings = settings,
                     taskCacheSnapshot = taskCacheSnapshot,
+                    reminderStatusMessage = reminderStatusMessage,
+                    areNotificationsAllowed = areNotificationsAllowed,
+                    onDismissReminderStatus = onDismissReminderStatus,
+                    onEnableNotificationsClick = onEnableNotificationsClick,
+                    onCheckReminderNowClick = onCheckReminderNowClick,
+                    onReviewNowClick = onReviewNowClick,
+                    onSnoozeReminderClick = onSnoozeReminderClick,
                 )
             }
         }
@@ -413,6 +514,13 @@ fun TaskReminderApp(
 private fun TodayScreen(
     settings: TaskReminderSettings,
     taskCacheSnapshot: TaskCacheSnapshot,
+    reminderStatusMessage: String?,
+    areNotificationsAllowed: Boolean,
+    onDismissReminderStatus: () -> Unit,
+    onEnableNotificationsClick: () -> Unit,
+    onCheckReminderNowClick: () -> Unit,
+    onReviewNowClick: () -> Unit,
+    onSnoozeReminderClick: () -> Unit,
 ) {
     AppScreenScaffold(section = appSectionForRoute(TODAY_ROUTE)) {
         ElevatedCard(
@@ -444,13 +552,66 @@ private fun TodayScreen(
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             AssistChip(
-                onClick = {},
-                label = { Text("Review every ${settings.reminderIntervalMinutes} min") },
+                onClick = onReviewNowClick,
+                label = { Text("Review now") },
             )
             AssistChip(
-                onClick = {},
+                onClick = onSnoozeReminderClick,
                 label = { Text("Snooze ${settings.snoozeMinutes} min") },
             )
+        }
+
+        ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Notifications,
+                        contentDescription = null,
+                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Reminder notifications",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = if (areNotificationsAllowed) {
+                                "Notifications are enabled."
+                            } else {
+                                "Notifications are off."
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+
+                if (!reminderStatusMessage.isNullOrBlank()) {
+                    ListItem(
+                        headlineContent = { Text(reminderStatusMessage) },
+                        trailingContent = {
+                            OutlinedButton(onClick = onDismissReminderStatus) {
+                                Text("Dismiss")
+                            }
+                        },
+                    )
+                }
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = onEnableNotificationsClick) {
+                        Text("Enable")
+                    }
+                    Button(onClick = onCheckReminderNowClick) {
+                        Text("Check now")
+                    }
+                }
+            }
         }
     }
 }

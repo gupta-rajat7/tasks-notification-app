@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import java.io.IOException
@@ -38,6 +39,8 @@ class SettingsStore(context: Context) {
                     preferences[SnoozeMinutesKey] ?: DEFAULT_SNOOZE_MINUTES,
                 ),
                 themeMode = ThemeMode.fromStorageValue(preferences[ThemeModeKey]),
+                lastReviewedAtMillis = preferences[LastReviewedAtMillisKey],
+                snoozedUntilMillis = preferences[SnoozedUntilMillisKey],
             )
         }
 
@@ -59,9 +62,24 @@ class SettingsStore(context: Context) {
         }
     }
 
+    suspend fun recordReview(nowMillis: Long) {
+        dataStore.edit { preferences ->
+            preferences[LastReviewedAtMillisKey] = nowMillis
+            preferences.remove(SnoozedUntilMillisKey)
+        }
+    }
+
+    suspend fun snoozeUntil(untilMillis: Long) {
+        dataStore.edit { preferences ->
+            preferences[SnoozedUntilMillisKey] = untilMillis
+        }
+    }
+
     private companion object {
         val ReminderIntervalMinutesKey = intPreferencesKey("reminder_interval_minutes")
         val SnoozeMinutesKey = intPreferencesKey("snooze_minutes")
         val ThemeModeKey = stringPreferencesKey("theme_mode")
+        val LastReviewedAtMillisKey = longPreferencesKey("last_reviewed_at_millis")
+        val SnoozedUntilMillisKey = longPreferencesKey("snoozed_until_millis")
     }
 }
