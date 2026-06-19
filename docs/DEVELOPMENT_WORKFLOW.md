@@ -67,12 +67,18 @@ Reason: build the local app shell and state model before adding Google API compl
 - Update `docs/RISKS.md` when a policy, store, or technical risk changes.
 - Do not bury important decisions only in chat history.
 
-## First Commands To Document After Scaffold Exists
+## Android Build Commands
 
-Once the Android project exists, add exact commands here:
+Run these commands from the repository root after installing JDK 17 and Android SDK Platform 35.
+
+Build the debug APK:
 
 ```powershell
-.\gradlew.bat assembleDebug
-.\gradlew.bat testDebugUnitTest
+.\gradlew.bat :app:assembleDebug
 ```
 
+Run JVM unit tests:
+
+```powershell
+.\gradlew.bat :app:testDebugUnitTest
+```
