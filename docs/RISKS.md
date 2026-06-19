@@ -59,6 +59,18 @@ Mitigation:
 - Do not implement monetization until the free product works.
 - Keep V1 free of ads and billing.
 
+## RISK-007: Android Platform Drift
+
+Status: Open.
+
+Description: Android SDK, Play target API, and Gradle requirements change over time. Falling behind can block builds, testing, or Play Store releases.
+
+Mitigation:
+
+- Keep `compileSdk` and `targetSdk` aligned with the current supported Android SDK when practical.
+- Update Gradle and Android Gradle Plugin together.
+- Re-run local build and unit tests after each platform upgrade.
+
 ## RISK-006: Monetization Misalignment
 
 Status: Open.
@@ -69,4 +81,3 @@ Mitigation:
 
 - Avoid ads in V1.
 - Prefer one-time Pro unlock later.
-

@@ -62,9 +62,11 @@ Prioritize UI tests later for:
 
 Minimum manual coverage before beta:
 
+- One Android 16 emulator or phone.
 - One Android 13+ phone.
 - One Android 11 or 12 phone if available.
 - Dark mode.
 - Light mode.
 - No network after initial sync.
 
+For product-owner local testing on Windows, use `docs/PO_WINDOWS_TEST_GUIDE.md`.
