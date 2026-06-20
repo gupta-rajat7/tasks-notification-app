@@ -3,6 +3,7 @@ package com.guptarajat.screenactivetaskreminder.settings
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -39,6 +40,13 @@ class SettingsStore(context: Context) {
                     preferences[SnoozeMinutesKey] ?: DEFAULT_SNOOZE_MINUTES,
                 ),
                 themeMode = ThemeMode.fromStorageValue(preferences[ThemeModeKey]),
+                quietHoursEnabled = preferences[QuietHoursEnabledKey] ?: false,
+                quietHoursStartMinuteOfDay = normalizeMinuteOfDay(
+                    preferences[QuietHoursStartMinuteOfDayKey] ?: DEFAULT_QUIET_HOURS_START_MINUTE,
+                ),
+                quietHoursEndMinuteOfDay = normalizeMinuteOfDay(
+                    preferences[QuietHoursEndMinuteOfDayKey] ?: DEFAULT_QUIET_HOURS_END_MINUTE,
+                ),
                 lastReviewedAtMillis = preferences[LastReviewedAtMillisKey],
                 snoozedUntilMillis = preferences[SnoozedUntilMillisKey],
             )
@@ -62,6 +70,24 @@ class SettingsStore(context: Context) {
         }
     }
 
+    suspend fun setQuietHoursEnabled(value: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[QuietHoursEnabledKey] = value
+        }
+    }
+
+    suspend fun setQuietHoursStartMinuteOfDay(value: Int) {
+        dataStore.edit { preferences ->
+            preferences[QuietHoursStartMinuteOfDayKey] = normalizeMinuteOfDay(value)
+        }
+    }
+
+    suspend fun setQuietHoursEndMinuteOfDay(value: Int) {
+        dataStore.edit { preferences ->
+            preferences[QuietHoursEndMinuteOfDayKey] = normalizeMinuteOfDay(value)
+        }
+    }
+
     suspend fun recordReview(nowMillis: Long) {
         dataStore.edit { preferences ->
             preferences[LastReviewedAtMillisKey] = nowMillis
@@ -79,6 +105,9 @@ class SettingsStore(context: Context) {
         val ReminderIntervalMinutesKey = intPreferencesKey("reminder_interval_minutes")
         val SnoozeMinutesKey = intPreferencesKey("snooze_minutes")
         val ThemeModeKey = stringPreferencesKey("theme_mode")
+        val QuietHoursEnabledKey = booleanPreferencesKey("quiet_hours_enabled")
+        val QuietHoursStartMinuteOfDayKey = intPreferencesKey("quiet_hours_start_minute_of_day")
+        val QuietHoursEndMinuteOfDayKey = intPreferencesKey("quiet_hours_end_minute_of_day")
         val LastReviewedAtMillisKey = longPreferencesKey("last_reviewed_at_millis")
         val SnoozedUntilMillisKey = longPreferencesKey("snoozed_until_millis")
     }

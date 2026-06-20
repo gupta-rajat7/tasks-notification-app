@@ -11,6 +11,9 @@ class TaskReminderSettingsTest {
         assertEquals(10, settings.reminderIntervalMinutes)
         assertEquals(30, settings.snoozeMinutes)
         assertEquals(ThemeMode.SYSTEM, settings.themeMode)
+        assertEquals(false, settings.quietHoursEnabled)
+        assertEquals(22 * 60, settings.quietHoursStartMinuteOfDay)
+        assertEquals(7 * 60, settings.quietHoursEndMinuteOfDay)
         assertEquals(null, settings.lastReviewedAtMillis)
         assertEquals(null, settings.snoozedUntilMillis)
     }
@@ -32,5 +35,19 @@ class TaskReminderSettingsTest {
     @Test
     fun unknownThemeValueFallsBackToSystem() {
         assertEquals(ThemeMode.SYSTEM, ThemeMode.fromStorageValue("unexpected"))
+    }
+
+    @Test
+    fun minuteOfDayWrapsAroundDayBoundaries() {
+        assertEquals(23 * 60, normalizeMinuteOfDay(-60))
+        assertEquals(0, normalizeMinuteOfDay(24 * 60))
+        assertEquals(60, normalizeMinuteOfDay(25 * 60))
+    }
+
+    @Test
+    fun minuteOfDayFormatsAsHourAndMinute() {
+        assertEquals("00:00", formatMinuteOfDay(0))
+        assertEquals("07:05", formatMinuteOfDay(7 * 60 + 5))
+        assertEquals("23:00", formatMinuteOfDay(-60))
     }
 }

@@ -30,7 +30,8 @@
 
 - Reminder interval saves.
 - Snooze duration saves.
-- Quiet hours save.
+- Quiet hours can be turned on and off.
+- Quiet hours start and end times save.
 - Theme saves.
 - Sign-out works.
 
@@ -38,6 +39,7 @@
 
 - Reminder appears only when pending tasks exist.
 - Reminder does not appear during quiet hours.
+- Today > Check now reports quiet-hours suppression when quiet hours are active.
 - Today > Enable requests or confirms notification permission.
 - Today > Check now posts a reminder notification when cached pending tasks are eligible.
 - Notification contains Review, Snooze, and Done for now actions.

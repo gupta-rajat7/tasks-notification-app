@@ -123,6 +123,14 @@ Current V1 notification actions:
 - Snooze stores `snoozedUntilMillis` in DataStore and cancels the visible notification.
 - Done for now stores `lastReviewedAtMillis` in DataStore and cancels the visible notification.
 
+Quiet-hours settings are stored in DataStore as:
+
+- `quietHoursEnabled`.
+- `quietHoursStartMinuteOfDay`.
+- `quietHoursEndMinuteOfDay`.
+
+The Settings screen configures quiet-hours start and end in hourly steps. The reminder coordinator maps these values into the pure Kotlin `QuietHours` rule model before posting a notification.
+
 Automatic background scheduling is still a future reminder-engine slice.
 
 ### Sync Flow
