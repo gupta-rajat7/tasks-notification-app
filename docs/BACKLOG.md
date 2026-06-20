@@ -134,6 +134,7 @@ Acceptance criteria:
 - App schedules the next reminder check after startup, settings changes, review, and snooze.
 - Scheduled checks reuse `ReminderRules` and `ReminderNotificationCoordinator`.
 - Scheduling remains conservative and avoids exact-alarm permission unless explicitly approved.
+- Scheduled checks are best-effort under Android background limits; V1 does not guarantee exact delivery at the configured minute.
 
 ## P2: Product Polish
 

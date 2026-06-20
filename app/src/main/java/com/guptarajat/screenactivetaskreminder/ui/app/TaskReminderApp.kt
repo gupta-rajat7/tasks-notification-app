@@ -88,6 +88,7 @@ import com.guptarajat.screenactivetaskreminder.data.remote.GoogleTasksFetchResul
 import com.guptarajat.screenactivetaskreminder.data.repository.TaskCacheRepository
 import com.guptarajat.screenactivetaskreminder.data.repository.TaskCacheSnapshot
 import com.guptarajat.screenactivetaskreminder.reminders.ReminderNotificationCoordinator
+import com.guptarajat.screenactivetaskreminder.reminders.ReminderScheduler
 import com.guptarajat.screenactivetaskreminder.reminders.reminderNotificationStatusMessage
 import com.guptarajat.screenactivetaskreminder.reminders.snoozeUntilMillis
 import com.guptarajat.screenactivetaskreminder.settings.MAX_REMINDER_INTERVAL_MINUTES
@@ -153,9 +154,19 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
         mutableStateOf(ReminderNotificationCoordinator.areNotificationsEnabled(context))
     }
 
+    suspend fun scheduleNextReminderCheck() {
+        runCatching {
+            ReminderScheduler.scheduleNext(context)
+        }
+    }
+
     LaunchedEffect(context) {
         ReminderNotificationCoordinator.ensureNotificationChannel(context)
         areNotificationsAllowed = ReminderNotificationCoordinator.areNotificationsEnabled(context)
+    }
+
+    LaunchedEffect(context, settings) {
+        scheduleNextReminderCheck()
     }
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -166,6 +177,9 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
             "Notifications are enabled."
         } else {
             "Notifications were not enabled."
+        }
+        scope.launch {
+            scheduleNextReminderCheck()
         }
     }
 
@@ -190,6 +204,7 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
                     syncStatusMessage = result.message
                 }
             }
+            scheduleNextReminderCheck()
             isTaskSyncInProgress = false
             pendingSyncAccountId = null
         }
@@ -348,6 +363,9 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
                     } else {
                         "Enable notifications in Android settings to receive reminders."
                     }
+                    scope.launch {
+                        scheduleNextReminderCheck()
+                    }
                 }
             },
             onCheckReminderNowClick = {
@@ -356,6 +374,7 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
                     areNotificationsAllowed =
                         ReminderNotificationCoordinator.areNotificationsEnabled(context)
                     reminderStatusMessage = reminderNotificationStatusMessage(result)
+                    scheduleNextReminderCheck()
                 }
             },
             onReviewNowClick = {
@@ -363,6 +382,7 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
                     settingsStore.recordReview(System.currentTimeMillis())
                     ReminderNotificationCoordinator.cancel(context)
                     reminderStatusMessage = "Review recorded."
+                    scheduleNextReminderCheck()
                 }
             },
             onSnoozeReminderClick = {
@@ -375,6 +395,7 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
                     )
                     ReminderNotificationCoordinator.cancel(context)
                     reminderStatusMessage = "Reminders snoozed for ${settings.snoozeMinutes} minutes."
+                    scheduleNextReminderCheck()
                 }
             },
             onReminderIntervalChange = { value ->

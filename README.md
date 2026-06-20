@@ -78,5 +78,5 @@ The first real milestone is not monetization or advanced monitoring. It is a wor
 2. Lets the user sign in with Google.
 3. Reads Google Tasks.
 4. Caches tasks locally.
-5. Sends a reminder notification after a configured screen-review interval.
+5. Sends a reminder notification after a configured review interval.
 6. Lets the user snooze or mark the reminder as reviewed.

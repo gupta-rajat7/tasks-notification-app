@@ -108,12 +108,16 @@ com.guptarajat.screenactivetaskreminder
 
 ### Reminder Decision Flow
 
-1. Reminder check runs from the Today screen test action.
-2. App reads settings from DataStore.
-3. App checks quiet hours and snooze state.
-4. App queries Room for pending tasks.
-5. App checks last review time.
-6. App posts notification if all rules pass.
+1. App startup, reminder settings changes, task sync, review, snooze, and notification actions ask `ReminderScheduler` to schedule the next check.
+2. `ReminderScheduler` calculates a conservative delay from DataStore settings, quiet hours, snooze state, and last review time.
+3. Android WorkManager runs `ReminderCheckWorker` as best-effort background work.
+4. `ReminderCheckWorker` calls `ReminderNotificationCoordinator.evaluateAndNotify`.
+5. App reads settings from DataStore.
+6. App checks quiet hours and snooze state.
+7. App queries Room for pending tasks.
+8. App checks last review time.
+9. App posts notification if all rules pass.
+10. Worker schedules the next follow-up check.
 
 `ReminderRules` stays pure Kotlin. Android-specific notification work lives in `ReminderNotificationCoordinator`, and notification actions are handled by `ReminderNotificationActionReceiver`.
 
@@ -131,11 +135,11 @@ Quiet-hours settings are stored in DataStore as:
 
 The Settings screen configures quiet-hours start and end in hourly steps. The reminder coordinator maps these values into the pure Kotlin `QuietHours` rule model before posting a notification.
 
-Automatic background scheduling is still a future reminder-engine slice.
+Automatic reminder scheduling uses unique one-time WorkManager work rather than exact alarms. The app does not request exact-alarm permission, battery-exemption permission, Usage Access, AccessibilityService, or overlay permission for V1 reminder scheduling. Timing is best-effort under Android background limits and may be delayed by Doze, app standby, battery saver, or force-stop.
 
 ### Sync Flow
 
-1. WorkManager starts sync.
+1. User starts sync from the Tasks screen.
 2. Remote Google Tasks API client fetches task lists and tasks.
 3. Repository maps remote data into Room entities.
 4. UI observes Room and updates automatically.

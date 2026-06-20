@@ -35,6 +35,7 @@ class ReminderNotificationActionReceiver : BroadcastReceiver() {
                     }
                 }
                 ReminderNotificationCoordinator.cancel(appContext)
+                ReminderScheduler.scheduleNext(appContext)
             }
             pendingResult.finish()
         }
