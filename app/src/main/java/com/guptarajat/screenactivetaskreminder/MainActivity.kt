@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.guptarajat.screenactivetaskreminder.auth.AuthSession
 import com.guptarajat.screenactivetaskreminder.data.repository.TaskCacheSnapshot
+import com.guptarajat.screenactivetaskreminder.screenactivity.UsageAccessDiagnosticSnapshot
 import com.guptarajat.screenactivetaskreminder.settings.TaskReminderSettings
 import com.guptarajat.screenactivetaskreminder.ui.app.TaskReminderRoot
 import com.guptarajat.screenactivetaskreminder.ui.app.TaskReminderApp
@@ -58,6 +59,15 @@ private fun TaskReminderHomeScreenPreview() {
             onQuietHoursStartChange = {},
             onQuietHoursEndChange = {},
             onThemeModeChange = {},
+            usageAccessSnapshot = UsageAccessDiagnosticSnapshot(
+                hasUsageAccess = false,
+                canOpenUsageAccessSettings = true,
+            ),
+            usageAccessStatusMessage = null,
+            onCheckUsageAccessClick = {},
+            onOpenUsageAccessSettingsClick = {},
+            onScanScreenActivityClick = {},
+            onDismissUsageAccessStatus = {},
         )
     }
 }
