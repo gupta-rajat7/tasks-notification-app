@@ -6,6 +6,13 @@ Use this when you want to see the app on the Windows Android emulator.
 
 If you want to check the machine setup before building, run `docs\WINDOWS_READINESS_CHECK.md` first.
 
+For the fastest path, use the one-command run script:
+
+```powershell
+cd 'C:\Users\Tanu Gupta\Documents\Tasks Notification App'
+powershell -ExecutionPolicy Bypass -File .\tools\run_app_windows.ps1 -StartEmulator
+```
+
 ## What You Will Use
 
 - Project folder: `C:\Users\Tanu Gupta\Documents\Tasks Notification App`

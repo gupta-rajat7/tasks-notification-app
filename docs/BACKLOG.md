@@ -295,3 +295,16 @@ Acceptance criteria:
 - Checker can optionally run the debug APK build and JVM unit tests.
 - Product-owner guide explains how to run the checker and interpret PASS, WARN, and FAIL.
 - Windows run and PO test guides link to the checker.
+
+### REL-003: E2E Run Script And Testing Packet
+
+Give the product owner a one-command run path and a clear readiness verdict for end-to-end testing.
+
+Status: Complete in `docs/handoffs/2026-06-20-REL-003-e2e-test-readiness.md`.
+
+Acceptance criteria:
+
+- Windows script can check prerequisites, build the debug APK, start the emulator when requested, install the APK, and launch the app.
+- E2E readiness guide separates local app testing from Google Tasks live-sync testing.
+- PO test and run guides link to the E2E readiness path.
+- Remaining owner-controlled blockers are listed plainly.

@@ -27,6 +27,7 @@ The Android app has a working local V1 foundation:
 - Optional screen activity reminders from Settings.
 - Owner run/test guides and Play Store preparation docs.
 - Windows readiness checker for local setup diagnostics.
+- One-command Windows run script and E2E readiness guide.
 
 ## Current Blockers
 
@@ -59,6 +60,7 @@ The latest local commits include:
 - `87543dc Add optional screen activity reminder mode`
 - `75f57ee Update project status tracking`
 - `9cc8668 Align screen activity documentation`
+- `e5fc175 Add Windows readiness checker`
 
 Run this in PowerShell to refresh GitHub auth:
 
@@ -74,6 +76,8 @@ After auth is fixed, Codex should push the branch, open a PR, merge to `main`, a
 Use `docs/WINDOWS_RUN_APP_GUIDE.md` to run the app on the emulator.
 
 Use `docs/WINDOWS_READINESS_CHECK.md` first when you want one command to check Java, Android SDK, emulator, Google sign-in setup, and GitHub auth.
+
+Use `docs/E2E_TEST_READINESS.md` for the current ready/not-ready verdict and the fastest app launch command.
 
 Then use `docs/PO_WINDOWS_TEST_GUIDE.md` and focus on:
 

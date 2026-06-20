@@ -2,7 +2,7 @@
 
 This guide is for a nontechnical product owner testing the Android app from the Windows machine.
 
-If you only want to run and open the app, start with `docs/WINDOWS_RUN_APP_GUIDE.md`. If you want to check whether the Windows machine is ready first, use `docs/WINDOWS_READINESS_CHECK.md`.
+If you only want to run and open the app, start with `docs/WINDOWS_RUN_APP_GUIDE.md`. If you want to check whether the Windows machine is ready first, use `docs/WINDOWS_READINESS_CHECK.md`. If you want the testing readiness verdict, use `docs/E2E_TEST_READINESS.md`.
 
 ## What You Need
 
