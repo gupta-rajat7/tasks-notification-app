@@ -8,6 +8,8 @@ Backlog IDs are stable handles for Codex sessions. A session should claim one sm
 
 Prepare the app and project documents for Android 16 local development and first-owner testing.
 
+Status: Complete in `docs/handoffs/2026-06-19-INFRA-001-android-16-readiness.md`.
+
 Acceptance criteria:
 
 - App build config targets Android SDK 36.
@@ -21,6 +23,8 @@ Acceptance criteria:
 
 Create a native Android project using Kotlin, Compose, and Material 3.
 
+Status: Complete in `docs/handoffs/2026-06-19-APP-001-android-scaffold.md`.
+
 Acceptance criteria:
 
 - Gradle project exists.
@@ -31,6 +35,8 @@ Acceptance criteria:
 ### APP-002: Compose App Shell
 
 Create bottom navigation for Today, Tasks, and Settings.
+
+Status: Complete in `docs/handoffs/2026-06-19-APP-002-compose-shell.md`.
 
 Acceptance criteria:
 
@@ -43,6 +49,8 @@ Acceptance criteria:
 
 Add DataStore-backed settings.
 
+Status: Complete in `docs/handoffs/2026-06-19-APP-003-settings-store.md`.
+
 Acceptance criteria:
 
 - Reminder interval persists.
@@ -53,6 +61,8 @@ Acceptance criteria:
 ### APP-004: Final App Identity
 
 Replace scaffold placeholder identity with the stable Android app identity needed before Google OAuth and Play Store setup.
+
+Status: Complete in `docs/handoffs/2026-06-19-APP-004-final-app-identity.md`.
 
 Acceptance criteria:
 
@@ -67,6 +77,8 @@ Acceptance criteria:
 
 Add Google sign-in through Credential Manager.
 
+Status: Complete in `docs/handoffs/2026-06-19-SYNC-001-google-sign-in.md`.
+
 Acceptance criteria:
 
 - User can start sign-in.
@@ -78,6 +90,8 @@ Acceptance criteria:
 
 Fetch task lists and pending tasks.
 
+Status: Complete in `docs/handoffs/2026-06-19-SYNC-002-google-tasks-client.md`.
+
 Acceptance criteria:
 
 - App can fetch task lists.
@@ -87,6 +101,8 @@ Acceptance criteria:
 ### SYNC-003: Room Cache
 
 Persist task lists, tasks, and sync state.
+
+Status: Complete in `docs/handoffs/2026-06-19-SYNC-003-room-cache.md`.
 
 Acceptance criteria:
 
@@ -100,6 +116,8 @@ Acceptance criteria:
 
 Implement pure Kotlin reminder decision logic.
 
+Status: Complete in `docs/handoffs/2026-06-19-REM-001-reminder-rules.md`.
+
 Acceptance criteria:
 
 - Unit tests cover pending tasks, quiet hours, snooze, and recent review.
@@ -108,6 +126,8 @@ Acceptance criteria:
 ### REM-002: Notification Reminder
 
 Post reminder notification with actions.
+
+Status: Complete in `docs/handoffs/2026-06-20-REM-002-notification-reminder.md`.
 
 Acceptance criteria:
 
@@ -119,6 +139,8 @@ Acceptance criteria:
 
 Add quiet hours settings and suppression.
 
+Status: Complete in `docs/handoffs/2026-06-20-REM-003-quiet-hours-settings.md`.
+
 Acceptance criteria:
 
 - User can turn quiet hours on and off.
@@ -128,6 +150,8 @@ Acceptance criteria:
 ### REM-004: Automatic Reminder Scheduling
 
 Schedule reminder checks without requiring the user to press Check now.
+
+Status: Complete in `docs/handoffs/2026-06-20-REM-004-automatic-reminder-scheduling.md`.
 
 Acceptance criteria:
 
@@ -142,6 +166,8 @@ Acceptance criteria:
 
 Validate whether optional Android Usage Access can support the product promise of reminders after real phone activity.
 
+Status: Complete in `docs/handoffs/2026-06-20-SCR-001-usage-access-feasibility-spike.md`.
+
 Acceptance criteria:
 
 - No Usage Access permission is requested during first-run onboarding.
@@ -154,6 +180,8 @@ Acceptance criteria:
 ### SCR-002: Optional Screen Activity Mode
 
 Add user-facing optional screen-activity reminders only if `SCR-001` proves the approach is reliable enough.
+
+Status: Complete in `docs/handoffs/2026-06-20-SCR-002-optional-screen-activity-mode.md`.
 
 Acceptance criteria:
 
@@ -181,6 +209,8 @@ Acceptance criteria:
 ### UX-002: Empty And Error States
 
 Add polished empty states and sync error messaging.
+
+Status: Complete in `docs/handoffs/2026-06-20-UX-002-empty-error-states.md`.
 
 Acceptance criteria:
 
@@ -231,8 +261,50 @@ Acceptance criteria:
 
 Document and design the Pro feature gate. Do not implement billing yet.
 
+Status: Complete in `docs/handoffs/2026-06-20-MON-001-oauth-privacy-store-readiness.md`.
+
 Acceptance criteria:
 
 - Free and Pro feature matrix exists.
 - Upgrade screen mock copy exists.
 - No paid code path is added before approval.
+
+### REL-001: OAuth, Privacy, And Store Readiness Docs
+
+Document the owner-facing setup and release-readiness items needed before internal and closed testing.
+
+Status: Complete in `docs/handoffs/2026-06-20-MON-001-oauth-privacy-store-readiness.md`.
+
+Acceptance criteria:
+
+- Product owner has a plain-English Google OAuth setup guide.
+- Privacy policy draft exists for review.
+- Store listing draft exists for internal testing.
+- Performance test guidance separates emulator slowness from app slowness.
+- Play Store guide links to the supporting release documents.
+
+### REL-002: Windows Readiness Checker
+
+Give the product owner one command to check the local Windows development and testing setup.
+
+Status: Complete in `docs/handoffs/2026-06-20-REL-002-windows-readiness-checker.md`.
+
+Acceptance criteria:
+
+- Checker verifies JDK, Android SDK, SDK Platform 36, ADB, emulator tools, AVD presence, connected device status, Google Web Client ID, and GitHub CLI auth.
+- Checker can optionally run the debug APK build and JVM unit tests.
+- Product-owner guide explains how to run the checker and interpret PASS, WARN, and FAIL.
+- Windows run and PO test guides link to the checker.
+
+### REL-003: E2E Run Script And Testing Packet
+
+Give the product owner a one-command run path and a clear readiness verdict for end-to-end testing.
+
+Status: Complete in `docs/handoffs/2026-06-20-REL-003-e2e-test-readiness.md`.
+
+Acceptance criteria:
+
+- Windows script can check prerequisites, build the debug APK, start the emulator when requested, install the APK, and launch the app.
+- E2E readiness guide separates local app testing from Google Tasks live-sync testing.
+- PO test and run guides link to the E2E readiness path.
+- Remaining owner-controlled blockers are listed plainly.

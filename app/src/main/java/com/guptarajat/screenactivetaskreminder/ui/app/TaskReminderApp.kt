@@ -103,6 +103,7 @@ import com.guptarajat.screenactivetaskreminder.settings.MAX_SNOOZE_MINUTES
 import com.guptarajat.screenactivetaskreminder.settings.MIN_REMINDER_INTERVAL_MINUTES
 import com.guptarajat.screenactivetaskreminder.settings.MIN_SNOOZE_MINUTES
 import com.guptarajat.screenactivetaskreminder.settings.QUIET_HOURS_STEP_MINUTES
+import com.guptarajat.screenactivetaskreminder.settings.SCREEN_ACTIVITY_REMINDER_WINDOW_MINUTES
 import com.guptarajat.screenactivetaskreminder.settings.SettingsStore
 import com.guptarajat.screenactivetaskreminder.settings.TaskReminderSettings
 import com.guptarajat.screenactivetaskreminder.settings.ThemeMode
@@ -576,6 +577,22 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
                 onThemeModeChange = { value ->
                     scope.launch { settingsStore.setThemeMode(value) }
                 },
+                onScreenActivityModeEnabledChange = { value ->
+                    scope.launch {
+                        settingsStore.setScreenActivityModeEnabled(value)
+                        usageAccessSnapshot = UsageAccessDiagnostics.accessSnapshot(context)
+                        usageAccessStatusMessage = if (value) {
+                            if (usageAccessSnapshot.hasUsageAccess) {
+                                "Screen activity reminders are on."
+                            } else {
+                                "Screen activity mode is on. Open Usage Access settings to allow recent activity checks."
+                            }
+                        } else {
+                            "Screen activity mode is off. Standard task reminders still work."
+                        }
+                        scheduleNextReminderCheck()
+                    }
+                },
                 usageAccessSnapshot = usageAccessSnapshot,
                 usageAccessStatusMessage = usageAccessStatusMessage,
                 onCheckUsageAccessClick = {
@@ -589,7 +606,7 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
                 onOpenUsageAccessSettingsClick = {
                     val didOpenSettings = UsageAccessDiagnostics.openUsageAccessSettings(context)
                     usageAccessStatusMessage = if (didOpenSettings) {
-                        "Opened Android Usage Access settings."
+                        "Opened Android Usage Access settings. Turn on this app, then return and check access."
                     } else {
                         "Android Usage Access settings could not be opened."
                     }
@@ -875,6 +892,7 @@ fun TaskReminderApp(
     onQuietHoursStartChange: (Int) -> Unit,
     onQuietHoursEndChange: (Int) -> Unit,
     onThemeModeChange: (ThemeMode) -> Unit,
+    onScreenActivityModeEnabledChange: (Boolean) -> Unit,
     usageAccessSnapshot: UsageAccessDiagnosticSnapshot,
     usageAccessStatusMessage: String?,
     onCheckUsageAccessClick: () -> Unit,
@@ -969,6 +987,7 @@ fun TaskReminderApp(
                     onQuietHoursStartChange = onQuietHoursStartChange,
                     onQuietHoursEndChange = onQuietHoursEndChange,
                     onThemeModeChange = onThemeModeChange,
+                    onScreenActivityModeEnabledChange = onScreenActivityModeEnabledChange,
                     reminderStatusMessage = reminderStatusMessage,
                     areNotificationsAllowed = areNotificationsAllowed,
                     onDismissReminderStatus = onDismissReminderStatus,
@@ -1369,37 +1388,21 @@ private fun TodayGuidanceCard(
     onOpenTasksClick: () -> Unit,
     onOpenSettingsClick: () -> Unit,
 ) {
-    when {
-        !authSession.isSignedIn -> GuidanceCard(
-            icon = Icons.Outlined.Settings,
-            title = "Start with Google Tasks",
-            body = "Connect your Google account so reminders can watch your pending tasks.",
-            primaryActionLabel = "Go to Settings",
-            onPrimaryActionClick = onOpenSettingsClick,
-        )
+    val emptyStateCopy = todayEmptyStateCopy(
+        taskCacheSnapshot = taskCacheSnapshot,
+        authSession = authSession,
+    )
 
-        !taskCacheSnapshot.lastError.isNullOrBlank() -> RecoverableErrorCard(
-            title = "Using saved tasks",
-            body = "The last sync did not finish, so Today is showing the latest saved task cache.",
-            detail = taskCacheSnapshot.lastError,
-            primaryActionLabel = "Open Tasks",
-            onPrimaryActionClick = onOpenTasksClick,
-        )
-
-        !taskCacheSnapshot.hasSyncedData -> GuidanceCard(
-            icon = Icons.Outlined.Sync,
-            title = "Bring in your tasks",
-            body = "Sync once to fill the local task cache. After that, reminders can work from the saved task list.",
-            primaryActionLabel = "Open Tasks",
-            onPrimaryActionClick = onOpenTasksClick,
-        )
-
-        taskCacheSnapshot.pendingTasks.isEmpty() -> GuidanceCard(
-            icon = Icons.Outlined.CheckCircle,
-            title = "No pending tasks",
-            body = "You are clear for now. New pending Google Tasks will appear here after the next sync.",
-            primaryActionLabel = "View Tasks",
-            onPrimaryActionClick = onOpenTasksClick,
+    if (emptyStateCopy != null) {
+        EmptyStateCard(
+            copy = emptyStateCopy,
+            onPrimaryActionClick = {
+                when (emptyStateCopy.action) {
+                    EmptyStateAction.OPEN_SETTINGS -> onOpenSettingsClick()
+                    EmptyStateAction.OPEN_TASKS -> onOpenTasksClick()
+                    EmptyStateAction.SYNC_TASKS -> onOpenTasksClick()
+                }
+            },
         )
     }
 }
@@ -1412,89 +1415,87 @@ private fun TaskListEmptyStateCard(
     onGoogleTasksSyncClick: () -> Unit,
     onOpenSettingsClick: () -> Unit,
 ) {
-    when {
-        !authSession.isSignedIn -> GuidanceCard(
-            icon = Icons.Outlined.Settings,
-            title = "Sign in to load Google Tasks",
-            body = "The app only reads your Google Tasks after you connect an account.",
-            primaryActionLabel = "Go to Settings",
-            onPrimaryActionClick = onOpenSettingsClick,
-        )
+    val emptyStateCopy = tasksEmptyStateCopy(
+        taskCacheSnapshot = taskCacheSnapshot,
+        authSession = authSession,
+    )
 
-        !taskCacheSnapshot.lastError.isNullOrBlank() -> RecoverableErrorCard(
-            title = "No tasks shown after sync issue",
-            body = "The last sync did not finish. Try again when your connection is stable.",
-            detail = taskCacheSnapshot.lastError,
-            primaryActionLabel = "Try again",
-            onPrimaryActionClick = onGoogleTasksSyncClick,
-            primaryActionEnabled = !isTaskSyncInProgress,
-        )
-
-        !taskCacheSnapshot.hasSyncedData -> GuidanceCard(
-            icon = Icons.Outlined.Sync,
-            title = "Ready for first sync",
-            body = "Sync now to bring pending tasks into the on-device cache.",
-            primaryActionLabel = "Sync now",
-            onPrimaryActionClick = onGoogleTasksSyncClick,
-            primaryActionEnabled = !isTaskSyncInProgress,
-        )
-
-        else -> GuidanceCard(
-            icon = Icons.Outlined.CheckCircle,
-            title = "No pending tasks",
-            body = "Your synced Google Tasks do not have pending items right now.",
-            primaryActionLabel = "Sync again",
-            onPrimaryActionClick = onGoogleTasksSyncClick,
-            primaryActionEnabled = !isTaskSyncInProgress,
-        )
-    }
+    EmptyStateCard(
+        copy = emptyStateCopy,
+        onPrimaryActionClick = {
+            when (emptyStateCopy.action) {
+                EmptyStateAction.OPEN_SETTINGS -> onOpenSettingsClick()
+                EmptyStateAction.OPEN_TASKS -> Unit
+                EmptyStateAction.SYNC_TASKS -> onGoogleTasksSyncClick()
+            }
+        },
+        primaryActionEnabled = when (emptyStateCopy.action) {
+            EmptyStateAction.SYNC_TASKS -> !isTaskSyncInProgress
+            else -> true
+        },
+    )
 }
 
 @Composable
-private fun GuidanceCard(
-    icon: ImageVector,
-    title: String,
-    body: String,
-    primaryActionLabel: String,
+private fun EmptyStateCard(
+    copy: EmptyStateCopy,
     onPrimaryActionClick: () -> Unit,
     primaryActionEnabled: Boolean = true,
 ) {
-    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+    when (copy.tone) {
+        EmptyStateTone.ERROR -> RecoverableErrorCard(
+            title = copy.title,
+            body = copy.body,
+            detail = copy.detail,
+            primaryActionLabel = copy.actionLabel,
+            onPrimaryActionClick = onPrimaryActionClick,
+            primaryActionEnabled = primaryActionEnabled,
+        )
+
+        EmptyStateTone.GUIDANCE -> ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Icon(
+                        imageVector = copy.icon.toImageVector(),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
                     )
-                    Text(
-                        text = body,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = copy.title,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = copy.body,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
-            }
-            Button(
-                onClick = onPrimaryActionClick,
-                enabled = primaryActionEnabled,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(primaryActionLabel)
+                Button(
+                    onClick = onPrimaryActionClick,
+                    enabled = primaryActionEnabled,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(copy.actionLabel)
+                }
             }
         }
     }
+}
+
+private fun EmptyStateIcon.toImageVector(): ImageVector = when (this) {
+    EmptyStateIcon.CHECK_CIRCLE -> Icons.Outlined.CheckCircle
+    EmptyStateIcon.ERROR -> Icons.Outlined.ErrorOutline
+    EmptyStateIcon.SETTINGS -> Icons.Outlined.Settings
+    EmptyStateIcon.SYNC -> Icons.Outlined.Sync
 }
 
 @Composable
@@ -1601,6 +1602,7 @@ private fun SettingsScreen(
     onQuietHoursStartChange: (Int) -> Unit,
     onQuietHoursEndChange: (Int) -> Unit,
     onThemeModeChange: (ThemeMode) -> Unit,
+    onScreenActivityModeEnabledChange: (Boolean) -> Unit,
     reminderStatusMessage: String?,
     areNotificationsAllowed: Boolean,
     onDismissReminderStatus: () -> Unit,
@@ -1673,8 +1675,10 @@ private fun SettingsScreen(
         )
 
         ScreenActivityDiagnosticsCard(
+            settings = settings,
             usageAccessSnapshot = usageAccessSnapshot,
             usageAccessStatusMessage = usageAccessStatusMessage,
+            onScreenActivityModeEnabledChange = onScreenActivityModeEnabledChange,
             onCheckUsageAccessClick = onCheckUsageAccessClick,
             onOpenUsageAccessSettingsClick = onOpenUsageAccessSettingsClick,
             onScanScreenActivityClick = onScanScreenActivityClick,
@@ -1777,8 +1781,10 @@ private fun NotificationRecoveryCard(
 
 @Composable
 private fun ScreenActivityDiagnosticsCard(
+    settings: TaskReminderSettings,
     usageAccessSnapshot: UsageAccessDiagnosticSnapshot,
     usageAccessStatusMessage: String?,
+    onScreenActivityModeEnabledChange: (Boolean) -> Unit,
     onCheckUsageAccessClick: () -> Unit,
     onOpenUsageAccessSettingsClick: () -> Unit,
     onScanScreenActivityClick: () -> Unit,
@@ -1790,19 +1796,48 @@ private fun ScreenActivityDiagnosticsCard(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                text = "Screen activity diagnostics",
+                text = "Screen activity reminders",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                text = if (usageAccessSnapshot.hasUsageAccess) {
-                    "Usage Access is enabled. Diagnostics can scan recent Android usage events."
-                } else {
-                    "Usage Access is off. Reminders still work without this optional diagnostic."
+                text = when {
+                    settings.screenActivityModeEnabled && usageAccessSnapshot.hasUsageAccess ->
+                        "On. Reminder checks require recent Android activity evidence from the last $SCREEN_ACTIVITY_REMINDER_WINDOW_MINUTES minutes."
+                    settings.screenActivityModeEnabled ->
+                        "On, but Android Usage Access is off. Reminders will wait until access is allowed."
+                    else ->
+                        "Off. Standard task reminders still work without Usage Access."
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
+            ListItem(
+                headlineContent = { Text("Require recent screen activity") },
+                supportingContent = {
+                    Text(
+                        "Optional mode. The app checks derived activity state at reminder time and does not save raw per-app usage history.",
+                    )
+                },
+                trailingContent = {
+                    Switch(
+                        checked = settings.screenActivityModeEnabled,
+                        onCheckedChange = onScreenActivityModeEnabledChange,
+                    )
+                },
+            )
+
+            if (settings.screenActivityModeEnabled && !usageAccessSnapshot.hasUsageAccess) {
+                ListItem(
+                    headlineContent = { Text("Permission needed") },
+                    supportingContent = {
+                        Text(
+                            "Android will show Usage Access settings. Turn on this app there, then return and tap Check access.",
+                        )
+                    },
+                )
+            }
 
             if (!usageAccessStatusMessage.isNullOrBlank()) {
                 ListItem(
@@ -1885,6 +1920,9 @@ private fun GoogleAccountCard(
             if (!authStatusMessage.isNullOrBlank()) {
                 ListItem(
                     headlineContent = { Text(authStatusMessage) },
+                    supportingContent = {
+                        authStatusRecoveryCopy(authStatusMessage)?.let { Text(it) }
+                    },
                     trailingContent = {
                         OutlinedButton(onClick = onDismissAuthStatus) {
                             Text("Dismiss")

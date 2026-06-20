@@ -49,7 +49,8 @@
 - App schedules automatic reminder checks after startup, reminder setting changes, review, and snooze.
 - Automatic reminder checks reuse the same quiet-hours, snooze, review, and pending-task rules as Today > Check now.
 - Automatic reminder timing is best-effort; Android may delay checks while the app is idle, battery saver is active, or the app was force-stopped.
-- V1 reminders do not measure real cross-app screen activity yet.
+- Standard reminders work without screen activity mode.
+- Optional screen activity reminders can require recent derived Android activity evidence when enabled in Settings.
 - Settings > Screen activity diagnostics can check Usage Access and scan recent target event counts.
 - Settings > Notification recovery explains whether notifications are enabled.
 - Settings > Notification recovery can open Android notification settings if notification permission was skipped or denied.
@@ -109,6 +110,20 @@ Manual checks for `UX-003`:
 - Settings > Notification recovery > Enable requests notification permission when Android allows a prompt.
 - Settings > Notification recovery > Open Android settings opens the app's Android notification settings or app settings fallback.
 - After returning from Android settings, Settings > Notification recovery > Check status shows whether notifications are enabled.
+
+## Optional Screen Activity Mode
+
+Manual checks for `SCR-002`:
+
+- Fresh install keeps screen activity mode off.
+- Settings > Screen activity reminders explains that the mode is optional.
+- Turning the mode on without Usage Access shows a permission-needed message.
+- Open Usage Access settings opens Android settings when available.
+- After Usage Access is enabled, Check access reports enabled.
+- Scan recent activity shows local event counts and does not require Google sign-in.
+- Today > Check now reports Usage Access suppression when the mode is on but access is off.
+- Today > Check now reports no recent screen activity when the mode is on, access is enabled, and no recent activity evidence exists.
+- Turning the mode off returns the app to standard task reminders.
 
 ## Device Coverage
 

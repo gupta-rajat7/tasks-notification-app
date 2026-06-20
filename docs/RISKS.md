@@ -26,14 +26,15 @@ Mitigation:
 
 ## RISK-003: Google OAuth Verification
 
-Status: Open.
+Status: Mitigated by documentation; open until Google Cloud OAuth is configured and verified.
 
 Description: Public apps using Google user data may require consent-screen verification and clear privacy disclosures.
 
 Mitigation:
 
 - Request the narrowest Google Tasks scope possible.
-- Prepare privacy policy before external beta.
+- Use the owner setup guide in `docs/PO_GOOGLE_OAUTH_SETUP_GUIDE.md`.
+- Prepare and review `docs/PRIVACY_POLICY_DRAFT.md` before external beta.
 - Keep data local and document that clearly.
 
 ## RISK-004: Background Reliability
@@ -50,7 +51,7 @@ Mitigation:
 
 ## RISK-008: Usage Access Onboarding And Privacy Risk
 
-Status: Open.
+Status: Mitigated by optional Settings-only mode; open until physical-device beta feedback.
 
 Description: Real cross-app screen-activity detection likely requires Usage Access. This adds setup friction and gives the app access to sensitive device usage signals.
 
@@ -61,6 +62,7 @@ Mitigation:
 - Explain the permission before opening Android settings.
 - Store derived reminder state instead of raw per-app usage history.
 - Keep the app useful when the user declines the permission.
+- Keep Play Store and privacy disclosures aligned with the optional mode.
 
 ## RISK-005: First-App Complexity
 
@@ -73,6 +75,7 @@ Mitigation:
 - Build in phases.
 - Do not implement monetization until the free product works.
 - Keep V1 free of ads and billing.
+- Keep owner-facing setup guides in `docs/`.
 
 ## RISK-007: Android Platform Drift
 
@@ -88,7 +91,7 @@ Mitigation:
 
 ## RISK-006: Monetization Misalignment
 
-Status: Open.
+Status: Mitigated for V1; open until paid features are approved.
 
 Description: Ads can contradict the distraction-reduction promise.
 
@@ -96,3 +99,4 @@ Mitigation:
 
 - Avoid ads in V1.
 - Prefer one-time Pro unlock later.
+- Use `docs/PRO_UNLOCK_DESIGN.md` before implementing billing.

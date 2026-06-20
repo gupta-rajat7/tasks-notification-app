@@ -2,6 +2,8 @@ package com.guptarajat.screenactivetaskreminder.screenactivity
 
 import android.app.usage.UsageEvents
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class UsageAccessDiagnosticsTest {
@@ -36,6 +38,57 @@ class UsageAccessDiagnosticsTest {
         assertEquals(0, summary.countFor(ScreenActivityUsageEventType.SCREEN_NON_INTERACTIVE))
         assertEquals(0, summary.countFor(ScreenActivityUsageEventType.ACTIVITY_RESUMED))
         assertEquals(0, summary.countFor(ScreenActivityUsageEventType.ACTIVITY_PAUSED))
+    }
+
+    @Test
+    fun recentScreenActivityEvidenceUsesInteractiveOrActivityEvents() {
+        assertTrue(
+            hasRecentScreenActivityEvidence(
+                listOf(UsageEvents.Event.SCREEN_INTERACTIVE),
+            ),
+        )
+        assertTrue(
+            hasRecentScreenActivityEvidence(
+                listOf(UsageEvents.Event.ACTIVITY_RESUMED),
+            ),
+        )
+        assertFalse(
+            hasRecentScreenActivityEvidence(
+                listOf(UsageEvents.Event.SCREEN_NON_INTERACTIVE),
+            ),
+        )
+    }
+
+    @Test
+    fun reminderSnapshotDoesNotRequireActivityWhenModeIsDisabled() {
+        val snapshot = screenActivityReminderSnapshotFromEventTypes(
+            eventTypes = emptyList(),
+            isEnabled = false,
+            hasUsageAccess = false,
+            nowMillis = 1_000L,
+        )
+
+        assertFalse(snapshot.isEnabled)
+        assertTrue(snapshot.hasRecentActivity)
+    }
+
+    @Test
+    fun reminderSnapshotRequiresRecentEvidenceWhenModeIsEnabled() {
+        val inactiveSnapshot = screenActivityReminderSnapshotFromEventTypes(
+            eventTypes = listOf(UsageEvents.Event.SCREEN_NON_INTERACTIVE),
+            isEnabled = true,
+            hasUsageAccess = true,
+            nowMillis = 1_000L,
+        )
+        val activeSnapshot = screenActivityReminderSnapshotFromEventTypes(
+            eventTypes = listOf(UsageEvents.Event.ACTIVITY_RESUMED),
+            isEnabled = true,
+            hasUsageAccess = true,
+            nowMillis = 1_000L,
+        )
+
+        assertFalse(inactiveSnapshot.hasRecentActivity)
+        assertTrue(activeSnapshot.hasRecentActivity)
     }
 
     private fun List<UsageAccessEventCount>.countFor(

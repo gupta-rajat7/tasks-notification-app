@@ -83,10 +83,12 @@ Deliverables:
 - Lightweight UI/UX plan.
 - Error states.
 - Permission recovery UI.
-- Optional Usage Access feasibility decision for real screen-activity detection.
+- Optional Settings-only screen-activity mode with remaining physical-device validation.
 - Basic manual QA pass.
-- Privacy policy draft.
-- Store listing draft.
+- Privacy policy draft in `docs/PRIVACY_POLICY_DRAFT.md`.
+- Store listing draft in `docs/STORE_LISTING_DRAFT.md`.
+- OAuth owner setup guide in `docs/PO_GOOGLE_OAUTH_SETUP_GUIDE.md`.
+- Performance test guide in `docs/PERFORMANCE_TEST_GUIDE.md`.
 
 Exit criteria:
 
@@ -99,10 +101,10 @@ Goal: Add monetization only after product usefulness is validated.
 
 Deliverables:
 
-- One-time Pro unlock design.
+- One-time Pro unlock design in `docs/PRO_UNLOCK_DESIGN.md`.
 - Pro feature list.
-- Play Billing integration.
-- Purchase restore.
+- Play Billing integration after product-owner approval.
+- Purchase restore after billing approval.
 
 Exit criteria:
 

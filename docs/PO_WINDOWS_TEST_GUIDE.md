@@ -2,6 +2,8 @@
 
 This guide is for a nontechnical product owner testing the Android app from the Windows machine.
 
+If you only want to run and open the app, start with `docs/WINDOWS_RUN_APP_GUIDE.md`. If you want to check whether the Windows machine is ready first, use `docs/WINDOWS_READINESS_CHECK.md`. If you want the testing readiness verdict, use `docs/E2E_TEST_READINESS.md`.
+
 ## What You Need
 
 - The project folder: `C:\Users\Tanu Gupta\Documents\Tasks Notification App`
@@ -56,6 +58,12 @@ Leave the emulator window open. In a second PowerShell window, confirm Android D
 
 7. Open the app on the emulator and test the checklist below.
 
+If the app is installed but not visible on the home screen, open the app drawer and search for `Screen Active Task Reminder`. You can also launch it from PowerShell:
+
+```powershell
+& 'C:\tmp\task-reminder-dev\android-sdk\platform-tools\adb.exe' shell am start -n com.guptarajat.screenactivetaskreminder/.MainActivity
+```
+
 ## Option B: Test On A Real Android Phone
 
 Use this when emulator setup is slow or unavailable.
@@ -102,8 +110,8 @@ $env:GRADLE_USER_HOME='C:\tmp\task-reminder-dev\gradle-home'
 - Today > Check now does not show a notification during active quiet hours.
 - Automatic reminder checks are scheduled after app startup, Settings reminder changes, Review now, Snooze, and Google Tasks sync.
 - For quick testing, use Today > Check now. Waiting for the automatic reminder may take longer than the configured interval because Android schedules background work to protect battery.
-- The current V1 app does not yet measure real cross-app screen activity. That remains a future optional Usage Access feature.
-- Settings > Screen activity diagnostics can check Usage Access, open Android Usage Access settings, and scan recent activity event counts for the `SCR-001` feasibility spike.
+- Optional screen-activity reminders are off by default and the app remains usable without Usage Access.
+- Settings > Screen activity reminders can explain Usage Access, open Android Usage Access settings, and scan recent activity event counts.
 - Settings > Notification recovery shows whether reminders can post notifications.
 - Settings > Notification recovery > Open Android settings opens Android app notification settings.
 - Settings > Notification recovery > Check status updates the status after returning from Android settings.
@@ -113,6 +121,26 @@ $env:GRADLE_USER_HOME='C:\tmp\task-reminder-dev\gradle-home'
 - App does not feel visually crowded.
 - Text is readable in light and dark mode.
 - No screen feels like an advertisement or sales page.
+
+## If Google Sign-In Shows A Setup Message
+
+If Settings says `Google sign-in needs OAuth setup before real accounts can connect`, that is an expected configuration blocker, not an app crash.
+
+Real sign-in needs Google Cloud OAuth setup and a local Web Client ID. Use `docs/PO_GOOGLE_OAUTH_SETUP_GUIDE.md` before retesting sign-in.
+
+## If The Emulator Feels Slow
+
+The Windows emulator can be slower than a real phone, especially while Gradle, PowerShell, or Codex are also running.
+
+Before reporting app slowness:
+
+- Wait for the emulator to fully boot.
+- Stop any running Gradle build.
+- Close extra heavy apps.
+- Check whether Android home screen and Settings are also slow.
+- Repeat on a real Android phone before beta decisions.
+
+See `docs/PERFORMANCE_TEST_GUIDE.md` for the full checklist.
 
 ## Known Setup Dependencies
 

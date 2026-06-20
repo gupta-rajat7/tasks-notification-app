@@ -14,6 +14,7 @@ data class ReminderRuleInput(
     val lastReviewedAtMillis: Long? = null,
     val snoozedUntilMillis: Long? = null,
     val quietHours: QuietHours = QuietHours(),
+    val screenActivityRequirement: ScreenActivityRequirement = ScreenActivityRequirement(),
 ) {
     init {
         require(localMinuteOfDay in 0 until MINUTES_PER_DAY) {
@@ -21,6 +22,12 @@ data class ReminderRuleInput(
         }
     }
 }
+
+data class ScreenActivityRequirement(
+    val isEnabled: Boolean = false,
+    val hasUsageAccess: Boolean = true,
+    val hasRecentActivity: Boolean = true,
+)
 
 data class QuietHours(
     val isEnabled: Boolean = false,
@@ -62,6 +69,8 @@ enum class ReminderSuppressionReason {
     QUIET_HOURS,
     SNOOZED,
     RECENTLY_REVIEWED,
+    USAGE_ACCESS_REQUIRED,
+    NO_RECENT_SCREEN_ACTIVITY,
 }
 
 object ReminderRules {
@@ -91,6 +100,17 @@ object ReminderRules {
                 reason = ReminderSuppressionReason.RECENTLY_REVIEWED,
                 nextEligibleAtMillis = nextReviewEligibleAtMillis,
             )
+        }
+
+        if (input.screenActivityRequirement.isEnabled) {
+            if (!input.screenActivityRequirement.hasUsageAccess) {
+                return ReminderDecision.suppress(ReminderSuppressionReason.USAGE_ACCESS_REQUIRED)
+            }
+            if (!input.screenActivityRequirement.hasRecentActivity) {
+                return ReminderDecision.suppress(
+                    ReminderSuppressionReason.NO_RECENT_SCREEN_ACTIVITY,
+                )
+            }
         }
 
         return ReminderDecision.remind()

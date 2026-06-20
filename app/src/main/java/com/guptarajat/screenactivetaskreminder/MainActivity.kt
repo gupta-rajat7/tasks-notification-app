@@ -62,6 +62,7 @@ private fun TaskReminderHomeScreenPreview() {
             onQuietHoursStartChange = {},
             onQuietHoursEndChange = {},
             onThemeModeChange = {},
+            onScreenActivityModeEnabledChange = {},
             usageAccessSnapshot = UsageAccessDiagnosticSnapshot(
                 hasUsageAccess = false,
                 canOpenUsageAccessSettings = true,
