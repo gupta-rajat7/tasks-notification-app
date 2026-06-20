@@ -15,6 +15,13 @@ data class FetchedTaskList(
     val isSelected: Boolean = true,
 )
 
+data class CachedTaskList(
+    val id: String,
+    val title: String,
+    val updatedAtMillis: Long?,
+    val isSelected: Boolean,
+)
+
 data class FetchedTask(
     val id: String,
     val taskListId: String,
@@ -29,6 +36,7 @@ data class FetchedTask(
 
 data class TaskCacheSnapshot(
     val pendingTasks: List<CachedTask> = emptyList(),
+    val taskLists: List<CachedTaskList> = emptyList(),
     val selectedTaskListCount: Int = 0,
     val lastSuccessfulSyncAtMillis: Long? = null,
     val lastError: String? = null,
@@ -38,4 +46,7 @@ data class TaskCacheSnapshot(
 
     val hasSyncedData: Boolean
         get() = lastSuccessfulSyncAtMillis != null || selectedTaskListCount > 0
+
+    val taskListCount: Int
+        get() = taskLists.size
 }

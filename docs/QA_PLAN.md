@@ -26,6 +26,8 @@
 - Empty state displays when there are no pending tasks.
 - Offline cached tasks display after app restart.
 - Manual refresh works.
+- Last successful sync time is visible after sync.
+- Synced task lists can be included or excluded from Today and reminders.
 - Sync error does not crash the app.
 
 ### Settings
@@ -85,6 +87,18 @@ Manual checks for `UX-002`:
 - Signed in, sync failed: Tasks shows a recoverable sync-error card with Try again.
 - Synced with zero pending tasks: Today and Tasks show no-pending task copy instead of a blank list.
 - Synced with pending tasks: task cards render without the empty-state cards.
+
+## UX Sync Feedback And Task-List Filtering
+
+Manual checks for `UX-004` and `UX-005`:
+
+- Before first sync, Tasks shows `Last synced: never`.
+- After successful sync, Tasks shows the last successful sync date and time.
+- After successful sync, Today shows the last successful sync date and watched-list summary.
+- Tasks shows synced Google Task lists in the Watched task lists card.
+- Turning a task-list switch off removes that list's pending tasks from Today and reminder eligibility.
+- Turning the switch back on restores that list's pending tasks.
+- Re-running sync preserves task-list selections for lists with the same Google list ID.
 
 ## UX Notification Recovery
 

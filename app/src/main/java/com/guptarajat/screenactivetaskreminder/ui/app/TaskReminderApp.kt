@@ -86,6 +86,7 @@ import com.guptarajat.screenactivetaskreminder.auth.GoogleSignInConfig
 import com.guptarajat.screenactivetaskreminder.auth.GoogleSignInResult
 import com.guptarajat.screenactivetaskreminder.auth.userMessage
 import com.guptarajat.screenactivetaskreminder.data.local.CachedTask
+import com.guptarajat.screenactivetaskreminder.data.repository.CachedTaskList
 import com.guptarajat.screenactivetaskreminder.data.local.TaskReminderDatabase
 import com.guptarajat.screenactivetaskreminder.data.remote.GoogleTasksApiClient
 import com.guptarajat.screenactivetaskreminder.data.remote.GoogleTasksFetchResult
@@ -113,6 +114,8 @@ import com.guptarajat.screenactivetaskreminder.ui.theme.TaskReminderTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.DateFormat
+import java.util.Date
 
 private data class AppDestination(
     val section: AppSectionCopy,
@@ -124,6 +127,26 @@ private val AppDestinations = listOf(
     AppDestination(appSectionForRoute(TASKS_ROUTE), Icons.AutoMirrored.Outlined.List),
     AppDestination(appSectionForRoute(SETTINGS_ROUTE), Icons.Outlined.Settings),
 )
+
+private fun lastSyncedLabel(lastSuccessfulSyncAtMillis: Long?): String =
+    if (lastSuccessfulSyncAtMillis == null) {
+        "Last synced: never"
+    } else {
+        "Last synced: ${
+            DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
+                .format(Date(lastSuccessfulSyncAtMillis))
+        }"
+    }
+
+private fun taskListSelectionLabel(snapshot: TaskCacheSnapshot): String =
+    when {
+        snapshot.taskListCount == 0 -> "No task lists synced yet."
+        snapshot.selectedTaskListCount == snapshot.taskListCount ->
+            "Watching all ${snapshot.taskListCount} synced lists."
+        snapshot.selectedTaskListCount == 1 ->
+            "Watching 1 of ${snapshot.taskListCount} synced lists."
+        else -> "Watching ${snapshot.selectedTaskListCount} of ${snapshot.taskListCount} synced lists."
+    }
 
 private enum class OnboardingStep {
     WELCOME,
@@ -390,6 +413,14 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
         }
     }
 
+    fun setTaskListSelected(taskListId: String, isSelected: Boolean) {
+        scope.launch {
+            taskCacheRepository.setTaskListSelected(taskListId, isSelected)
+            syncStatusMessage = "Task list filter updated."
+            scheduleNextReminderCheck()
+        }
+    }
+
     TaskReminderTheme(
         darkTheme = when (settings.themeMode) {
             ThemeMode.SYSTEM -> systemDarkTheme
@@ -484,6 +515,9 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
                 },
                 onDismissSyncStatus = {
                     syncStatusMessage = null
+                },
+                onTaskListSelectionChange = { taskListId, isSelected ->
+                    setTaskListSelected(taskListId, isSelected)
                 },
                 reminderStatusMessage = reminderStatusMessage,
                 areNotificationsAllowed = areNotificationsAllowed,
@@ -823,6 +857,7 @@ fun TaskReminderApp(
     onGoogleSignInClick: () -> Unit,
     onGoogleSignOutClick: () -> Unit,
     onGoogleTasksSyncClick: () -> Unit,
+    onTaskListSelectionChange: (String, Boolean) -> Unit,
     onDismissAuthStatus: () -> Unit,
     onDismissSyncStatus: () -> Unit,
     reminderStatusMessage: String?,
@@ -916,6 +951,7 @@ fun TaskReminderApp(
                     syncStatusMessage = syncStatusMessage,
                     isTaskSyncInProgress = isTaskSyncInProgress,
                     onGoogleTasksSyncClick = onGoogleTasksSyncClick,
+                    onTaskListSelectionChange = onTaskListSelectionChange,
                     onDismissSyncStatus = onDismissSyncStatus,
                     onOpenSettingsClick = { selectedRoute = SETTINGS_ROUTE },
                 )
@@ -1001,13 +1037,20 @@ private fun TodayScreen(
                 )
                 Text(
                     text = if (taskCacheSnapshot.hasSyncedData) {
-                        "Reading from the local Room cache."
+                        lastSyncedLabel(taskCacheSnapshot.lastSuccessfulSyncAtMillis)
                     } else {
                         "Sync Google Tasks to fill the local cache."
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
+                if (taskCacheSnapshot.taskListCount > 0) {
+                    Text(
+                        text = taskListSelectionLabel(taskCacheSnapshot),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                }
             }
         }
 
@@ -1105,6 +1148,7 @@ private fun TasksScreen(
     syncStatusMessage: String?,
     isTaskSyncInProgress: Boolean,
     onGoogleTasksSyncClick: () -> Unit,
+    onTaskListSelectionChange: (String, Boolean) -> Unit,
     onDismissSyncStatus: () -> Unit,
     onOpenSettingsClick: () -> Unit,
 ) {
@@ -1117,6 +1161,11 @@ private fun TasksScreen(
             onGoogleTasksSyncClick = onGoogleTasksSyncClick,
             onDismissSyncStatus = onDismissSyncStatus,
             onOpenSettingsClick = onOpenSettingsClick,
+        )
+
+        TaskListFilterCard(
+            taskCacheSnapshot = taskCacheSnapshot,
+            onTaskListSelectionChange = onTaskListSelectionChange,
         )
 
         if (taskCacheSnapshot.pendingTasks.isEmpty()) {
@@ -1164,6 +1213,18 @@ private fun GoogleTasksSyncCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Text(
+                text = lastSyncedLabel(taskCacheSnapshot.lastSuccessfulSyncAtMillis),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (taskCacheSnapshot.taskListCount > 0) {
+                Text(
+                    text = taskListSelectionLabel(taskCacheSnapshot),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
 
             if (!syncStatusMessage.isNullOrBlank()) {
                 ListItem(
@@ -1225,6 +1286,80 @@ private fun GoogleTasksSyncCard(
             }
         }
     }
+}
+
+@Composable
+private fun TaskListFilterCard(
+    taskCacheSnapshot: TaskCacheSnapshot,
+    onTaskListSelectionChange: (String, Boolean) -> Unit,
+) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = "Watched task lists",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = if (taskCacheSnapshot.taskLists.isEmpty()) {
+                    "Task lists will appear here after the first successful sync."
+                } else {
+                    "Choose which Google Task lists feed Today and reminder checks."
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            if (taskCacheSnapshot.taskLists.isEmpty()) {
+                ListItem(
+                    headlineContent = { Text("No synced task lists yet") },
+                    supportingContent = { Text("Sync Google Tasks to choose watched lists.") },
+                )
+            } else {
+                taskCacheSnapshot.taskLists.forEach { taskList ->
+                    TaskListSelectionRow(
+                        taskList = taskList,
+                        selectedTaskListCount = taskCacheSnapshot.selectedTaskListCount,
+                        onTaskListSelectionChange = onTaskListSelectionChange,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TaskListSelectionRow(
+    taskList: CachedTaskList,
+    selectedTaskListCount: Int,
+    onTaskListSelectionChange: (String, Boolean) -> Unit,
+) {
+    val canChangeSelection = !taskList.isSelected || selectedTaskListCount > 1
+
+    ListItem(
+        headlineContent = { Text(taskList.title) },
+        supportingContent = {
+            Text(
+                if (taskList.isSelected) {
+                    "Included in Today and reminders"
+                } else {
+                    "Hidden from Today and reminders"
+                },
+            )
+        },
+        trailingContent = {
+            Switch(
+                checked = taskList.isSelected,
+                enabled = canChangeSelection,
+                onCheckedChange = { isSelected ->
+                    onTaskListSelectionChange(taskList.id, isSelected)
+                },
+            )
+        },
+    )
 }
 
 @Composable

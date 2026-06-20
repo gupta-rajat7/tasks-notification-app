@@ -90,6 +90,12 @@ $env:GRADLE_USER_HOME='C:\tmp\task-reminder-dev\gradle-home'
 - Settings > Quiet hours start and end can be changed.
 - Google sign-in button starts a sign-in flow.
 - If sign-in cannot complete, note the exact message shown.
+- Tasks > Sync now manually starts Google Tasks sync after sign-in.
+- Tasks shows `Last synced: never` before the first successful sync.
+- Tasks shows a last synced date and time after successful sync.
+- Tasks > Watched task lists shows synced Google Task lists.
+- Turning a watched task-list switch off removes that list from Today and reminder checks.
+- Turning the watched task-list switch back on restores that list to Today and reminder checks.
 - Today > Enable turns on notification permission when Android asks.
 - Today > Open settings opens Android notification settings when notifications were skipped or denied.
 - Today > Check now shows a reminder notification when pending tasks are cached and eligible.

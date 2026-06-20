@@ -201,6 +201,32 @@ Acceptance criteria:
 - User can open Android app notification settings when the prompt is unavailable.
 - User can recheck notification status after returning to the app.
 
+### UX-004: Manual Sync And Last-Synced Feedback
+
+Make manual Google Tasks sync status clear to users.
+
+Status: Complete in `docs/handoffs/2026-06-20-UX-004-005-sync-feedback-task-list-filtering.md`.
+
+Acceptance criteria:
+
+- Tasks screen shows the manual `Sync now` action.
+- Tasks screen shows when Google Tasks last synced successfully.
+- Today screen shows cache freshness after a successful sync.
+- Sync progress and errors remain non-blocking.
+
+### UX-005: Task-List Filtering
+
+Allow users to choose which synced Google Task lists feed Today and reminders.
+
+Status: Complete in `docs/handoffs/2026-06-20-UX-004-005-sync-feedback-task-list-filtering.md`.
+
+Acceptance criteria:
+
+- Tasks screen shows synced Google Task lists.
+- User can include or exclude a synced task list.
+- Today and reminder checks use selected lists only.
+- Existing task-list selections are preserved across future syncs.
+
 ### MON-001: Pro Unlock Design
 
 Document and design the Pro feature gate. Do not implement billing yet.
