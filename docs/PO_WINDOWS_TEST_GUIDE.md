@@ -2,6 +2,8 @@
 
 This guide is for a nontechnical product owner testing the Android app from the Windows machine.
 
+If you only want to run and open the app, start with `docs/WINDOWS_RUN_APP_GUIDE.md`.
+
 ## What You Need
 
 - The project folder: `C:\Users\Tanu Gupta\Documents\Tasks Notification App`

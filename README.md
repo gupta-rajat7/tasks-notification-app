@@ -28,6 +28,7 @@ V1 should avoid Usage Access, AccessibilityService, and forced overlays as defau
 - [Backlog](docs/BACKLOG.md)
 - [Development Workflow](docs/DEVELOPMENT_WORKFLOW.md)
 - [Local Android Build Setup](docs/LOCAL_ANDROID_SETUP.md)
+- [Windows Run App Guide](docs/WINDOWS_RUN_APP_GUIDE.md)
 - [PO Windows Test Guide](docs/PO_WINDOWS_TEST_GUIDE.md)
 - [Google Play Store Release Guide](docs/PLAY_STORE_RELEASE_GUIDE.md)
 - [Lightweight UI/UX Plan](docs/UI_UX_PLAN.md)
