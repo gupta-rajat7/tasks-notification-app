@@ -47,11 +47,11 @@ Use `docs/PO_GOOGLE_OAUTH_SETUP_GUIDE.md`.
 
 ### GitHub Sync
 
-GitHub `main` was synced through PR #20 on 2026-06-20.
+GitHub `main` was synced through PR #21 on 2026-06-20.
 
 Latest merged main commit:
 
-- `bb165d5 Merge pull request #20 from gupta-rajat7/codex-open-readiness-docs-monetization-oauth`
+- `ed954a4 Merge pull request #21 from gupta-rajat7/codex/google-auth-setup-helper`
 
 Current new work, if any, should be pushed through a fresh `codex/` branch and PR.
 
