@@ -182,6 +182,8 @@ Acceptance criteria:
 
 Add polished empty states and sync error messaging.
 
+Status: Complete in `docs/handoffs/2026-06-20-UX-002-empty-error-states.md`.
+
 Acceptance criteria:
 
 - No tasks state is clear.
