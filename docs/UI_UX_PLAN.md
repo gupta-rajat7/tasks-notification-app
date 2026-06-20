@@ -75,7 +75,7 @@ Steps:
 ## UX Backlog
 
 - `UX-001`: Build guided first-run onboarding.
-- `UX-002`: Add polished empty and error states.
+- `UX-002`: Add polished empty and error states. Implemented for Today and Tasks with sign-in, first-sync, all-caught-up, and recoverable sync-error states.
 - `UX-003`: Add notification permission recovery screen.
 - `UX-004`: Add manual sync and last synced feedback.
 - `UX-005`: Add task-list filtering.

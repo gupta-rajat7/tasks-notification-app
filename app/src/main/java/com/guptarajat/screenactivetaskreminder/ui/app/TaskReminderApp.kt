@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material.icons.outlined.Settings
@@ -544,6 +545,7 @@ fun TaskReminderApp(
             when (selectedRoute) {
                 TODAY_ROUTE -> TodayScreen(
                     settings = settings,
+                    authSession = authSession,
                     taskCacheSnapshot = taskCacheSnapshot,
                     reminderStatusMessage = reminderStatusMessage,
                     areNotificationsAllowed = areNotificationsAllowed,
@@ -552,6 +554,8 @@ fun TaskReminderApp(
                     onCheckReminderNowClick = onCheckReminderNowClick,
                     onReviewNowClick = onReviewNowClick,
                     onSnoozeReminderClick = onSnoozeReminderClick,
+                    onOpenTasksClick = { selectedRoute = TASKS_ROUTE },
+                    onOpenSettingsClick = { selectedRoute = SETTINGS_ROUTE },
                 )
                 TASKS_ROUTE -> TasksScreen(
                     taskCacheSnapshot = taskCacheSnapshot,
@@ -560,6 +564,7 @@ fun TaskReminderApp(
                     isTaskSyncInProgress = isTaskSyncInProgress,
                     onGoogleTasksSyncClick = onGoogleTasksSyncClick,
                     onDismissSyncStatus = onDismissSyncStatus,
+                    onOpenSettingsClick = { selectedRoute = SETTINGS_ROUTE },
                 )
                 SETTINGS_ROUTE -> SettingsScreen(
                     settings = settings,
@@ -585,6 +590,7 @@ fun TaskReminderApp(
 
                 else -> TodayScreen(
                     settings = settings,
+                    authSession = authSession,
                     taskCacheSnapshot = taskCacheSnapshot,
                     reminderStatusMessage = reminderStatusMessage,
                     areNotificationsAllowed = areNotificationsAllowed,
@@ -593,6 +599,8 @@ fun TaskReminderApp(
                     onCheckReminderNowClick = onCheckReminderNowClick,
                     onReviewNowClick = onReviewNowClick,
                     onSnoozeReminderClick = onSnoozeReminderClick,
+                    onOpenTasksClick = { selectedRoute = TASKS_ROUTE },
+                    onOpenSettingsClick = { selectedRoute = SETTINGS_ROUTE },
                 )
             }
         }
@@ -602,6 +610,7 @@ fun TaskReminderApp(
 @Composable
 private fun TodayScreen(
     settings: TaskReminderSettings,
+    authSession: AuthSession,
     taskCacheSnapshot: TaskCacheSnapshot,
     reminderStatusMessage: String?,
     areNotificationsAllowed: Boolean,
@@ -610,6 +619,8 @@ private fun TodayScreen(
     onCheckReminderNowClick: () -> Unit,
     onReviewNowClick: () -> Unit,
     onSnoozeReminderClick: () -> Unit,
+    onOpenTasksClick: () -> Unit,
+    onOpenSettingsClick: () -> Unit,
 ) {
     AppScreenScaffold(section = appSectionForRoute(TODAY_ROUTE)) {
         ElevatedCard(
@@ -638,6 +649,13 @@ private fun TodayScreen(
                 )
             }
         }
+
+        TodayGuidanceCard(
+            taskCacheSnapshot = taskCacheSnapshot,
+            authSession = authSession,
+            onOpenTasksClick = onOpenTasksClick,
+            onOpenSettingsClick = onOpenSettingsClick,
+        )
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             AssistChip(
@@ -713,6 +731,7 @@ private fun TasksScreen(
     isTaskSyncInProgress: Boolean,
     onGoogleTasksSyncClick: () -> Unit,
     onDismissSyncStatus: () -> Unit,
+    onOpenSettingsClick: () -> Unit,
 ) {
     AppScreenScaffold(section = appSectionForRoute(TASKS_ROUTE)) {
         GoogleTasksSyncCard(
@@ -722,26 +741,17 @@ private fun TasksScreen(
             isTaskSyncInProgress = isTaskSyncInProgress,
             onGoogleTasksSyncClick = onGoogleTasksSyncClick,
             onDismissSyncStatus = onDismissSyncStatus,
+            onOpenSettingsClick = onOpenSettingsClick,
         )
 
         if (taskCacheSnapshot.pendingTasks.isEmpty()) {
-            ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Text(
-                        text = "No cached pending tasks",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(
-                        text = "Tap Sync now after signing in to bring active Google Tasks here.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
+            TaskListEmptyStateCard(
+                taskCacheSnapshot = taskCacheSnapshot,
+                authSession = authSession,
+                isTaskSyncInProgress = isTaskSyncInProgress,
+                onGoogleTasksSyncClick = onGoogleTasksSyncClick,
+                onOpenSettingsClick = onOpenSettingsClick,
+            )
         } else {
             taskCacheSnapshot.pendingTasks.forEach { task ->
                 CachedTaskCard(task = task)
@@ -758,6 +768,7 @@ private fun GoogleTasksSyncCard(
     isTaskSyncInProgress: Boolean,
     onGoogleTasksSyncClick: () -> Unit,
     onDismissSyncStatus: () -> Unit,
+    onOpenSettingsClick: () -> Unit,
 ) {
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -789,10 +800,26 @@ private fun GoogleTasksSyncCard(
                     },
                 )
             } else if (!taskCacheSnapshot.lastError.isNullOrBlank()) {
-                Text(
-                    text = "Last sync issue: ${taskCacheSnapshot.lastError}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
+                ListItem(
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Outlined.ErrorOutline,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                    },
+                    headlineContent = { Text("Sync did not finish") },
+                    supportingContent = {
+                        Text("Check your connection, then try syncing Google Tasks again.")
+                    },
+                    trailingContent = {
+                        OutlinedButton(
+                            onClick = onGoogleTasksSyncClick,
+                            enabled = authSession.isSignedIn && !isTaskSyncInProgress,
+                        ) {
+                            Text("Try again")
+                        }
+                    },
                 )
             }
 
@@ -811,10 +838,211 @@ private fun GoogleTasksSyncCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Sync now")
                 }
+                if (!authSession.isSignedIn) {
+                    OutlinedButton(onClick = onOpenSettingsClick) {
+                        Text("Sign in")
+                    }
+                }
 
                 if (isTaskSyncInProgress) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TodayGuidanceCard(
+    taskCacheSnapshot: TaskCacheSnapshot,
+    authSession: AuthSession,
+    onOpenTasksClick: () -> Unit,
+    onOpenSettingsClick: () -> Unit,
+) {
+    when {
+        !authSession.isSignedIn -> GuidanceCard(
+            icon = Icons.Outlined.Settings,
+            title = "Start with Google Tasks",
+            body = "Connect your Google account so reminders can watch your pending tasks.",
+            primaryActionLabel = "Go to Settings",
+            onPrimaryActionClick = onOpenSettingsClick,
+        )
+
+        !taskCacheSnapshot.lastError.isNullOrBlank() -> RecoverableErrorCard(
+            title = "Using saved tasks",
+            body = "The last sync did not finish, so Today is showing the latest saved task cache.",
+            detail = taskCacheSnapshot.lastError,
+            primaryActionLabel = "Open Tasks",
+            onPrimaryActionClick = onOpenTasksClick,
+        )
+
+        !taskCacheSnapshot.hasSyncedData -> GuidanceCard(
+            icon = Icons.Outlined.Sync,
+            title = "Bring in your tasks",
+            body = "Sync once to fill the local task cache. After that, reminders can work from the saved task list.",
+            primaryActionLabel = "Open Tasks",
+            onPrimaryActionClick = onOpenTasksClick,
+        )
+
+        taskCacheSnapshot.pendingTasks.isEmpty() -> GuidanceCard(
+            icon = Icons.Outlined.CheckCircle,
+            title = "No pending tasks",
+            body = "You are clear for now. New pending Google Tasks will appear here after the next sync.",
+            primaryActionLabel = "View Tasks",
+            onPrimaryActionClick = onOpenTasksClick,
+        )
+    }
+}
+
+@Composable
+private fun TaskListEmptyStateCard(
+    taskCacheSnapshot: TaskCacheSnapshot,
+    authSession: AuthSession,
+    isTaskSyncInProgress: Boolean,
+    onGoogleTasksSyncClick: () -> Unit,
+    onOpenSettingsClick: () -> Unit,
+) {
+    when {
+        !authSession.isSignedIn -> GuidanceCard(
+            icon = Icons.Outlined.Settings,
+            title = "Sign in to load Google Tasks",
+            body = "The app only reads your Google Tasks after you connect an account.",
+            primaryActionLabel = "Go to Settings",
+            onPrimaryActionClick = onOpenSettingsClick,
+        )
+
+        !taskCacheSnapshot.lastError.isNullOrBlank() -> RecoverableErrorCard(
+            title = "No tasks shown after sync issue",
+            body = "The last sync did not finish. Try again when your connection is stable.",
+            detail = taskCacheSnapshot.lastError,
+            primaryActionLabel = "Try again",
+            onPrimaryActionClick = onGoogleTasksSyncClick,
+            primaryActionEnabled = !isTaskSyncInProgress,
+        )
+
+        !taskCacheSnapshot.hasSyncedData -> GuidanceCard(
+            icon = Icons.Outlined.Sync,
+            title = "Ready for first sync",
+            body = "Sync now to bring pending tasks into the on-device cache.",
+            primaryActionLabel = "Sync now",
+            onPrimaryActionClick = onGoogleTasksSyncClick,
+            primaryActionEnabled = !isTaskSyncInProgress,
+        )
+
+        else -> GuidanceCard(
+            icon = Icons.Outlined.CheckCircle,
+            title = "No pending tasks",
+            body = "Your synced Google Tasks do not have pending items right now.",
+            primaryActionLabel = "Sync again",
+            onPrimaryActionClick = onGoogleTasksSyncClick,
+            primaryActionEnabled = !isTaskSyncInProgress,
+        )
+    }
+}
+
+@Composable
+private fun GuidanceCard(
+    icon: ImageVector,
+    title: String,
+    body: String,
+    primaryActionLabel: String,
+    onPrimaryActionClick: () -> Unit,
+    primaryActionEnabled: Boolean = true,
+) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = body,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            Button(
+                onClick = onPrimaryActionClick,
+                enabled = primaryActionEnabled,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(primaryActionLabel)
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecoverableErrorCard(
+    title: String,
+    body: String,
+    detail: String?,
+    primaryActionLabel: String,
+    onPrimaryActionClick: () -> Unit,
+    primaryActionEnabled: Boolean = true,
+) {
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer,
+        ),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.ErrorOutline,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                    Text(
+                        text = body,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                    if (!detail.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = detail,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                        )
+                    }
+                }
+            }
+            Button(
+                onClick = onPrimaryActionClick,
+                enabled = primaryActionEnabled,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(primaryActionLabel)
             }
         }
     }

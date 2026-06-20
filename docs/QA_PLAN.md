@@ -71,6 +71,16 @@ Prioritize UI tests later for:
 - Optional Usage Access explanation and decline path if screen-activity mode is approved later.
 - `SCR-001` emulator scan from `docs/SCREEN_ACTIVITY_FEASIBILITY.md`.
 
+## UX Empty And Error States
+
+Manual checks for `UX-002`:
+
+- Fresh install, not signed in: Today shows the Google Tasks setup card; Tasks shows the sign-in empty state.
+- Signed in, never synced: Today points to Tasks; Tasks shows the first-sync empty state.
+- Signed in, sync failed: Tasks shows a recoverable sync-error card with Try again.
+- Synced with zero pending tasks: Today and Tasks show no-pending task copy instead of a blank list.
+- Synced with pending tasks: task cards render without the empty-state cards.
+
 ## Device Coverage
 
 Minimum manual coverage before beta:
