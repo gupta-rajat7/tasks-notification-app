@@ -4,8 +4,11 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings as AndroidSettings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -227,7 +230,21 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
         reminderStatusMessage = if (isGranted || areNotificationsAllowed) {
             "Notifications are enabled."
         } else {
-            "Notifications were not enabled."
+            "Notifications are still off. Open Android notification settings if the prompt does not appear again."
+        }
+        scope.launch {
+            scheduleNextReminderCheck()
+        }
+    }
+
+    val notificationSettingsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+    ) {
+        areNotificationsAllowed = ReminderNotificationCoordinator.areNotificationsEnabled(context)
+        reminderStatusMessage = if (areNotificationsAllowed) {
+            "Notifications are enabled."
+        } else {
+            "Notifications are still off. Turn on notifications in Android settings to receive reminders."
         }
         scope.launch {
             scheduleNextReminderCheck()
@@ -328,10 +345,40 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
             reminderStatusMessage = if (areNotificationsAllowed) {
                 "Notifications are enabled."
             } else {
-                "Enable notifications in Android settings to receive reminders."
+                "Notifications are still off. Open Android notification settings to receive reminders."
             }
             scope.launch {
                 scheduleNextReminderCheck()
+            }
+        }
+    }
+
+    fun checkReminderNotificationStatus() {
+        areNotificationsAllowed = ReminderNotificationCoordinator.areNotificationsEnabled(context)
+        reminderStatusMessage = if (areNotificationsAllowed) {
+            "Notifications are enabled."
+        } else {
+            "Notifications are off. Use Enable or open Android notification settings."
+        }
+        scope.launch {
+            scheduleNextReminderCheck()
+        }
+    }
+
+    fun openReminderNotificationSettings() {
+        val settingsIntent = Intent(AndroidSettings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            putExtra(AndroidSettings.EXTRA_APP_PACKAGE, context.packageName)
+        }
+        runCatching {
+            notificationSettingsLauncher.launch(settingsIntent)
+        }.onFailure {
+            val fallbackIntent = Intent(AndroidSettings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.parse("package:${context.packageName}")
+            }
+            runCatching {
+                notificationSettingsLauncher.launch(fallbackIntent)
+            }.onFailure {
+                reminderStatusMessage = "Android notification settings could not be opened."
             }
         }
     }
@@ -444,6 +491,8 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
                     reminderStatusMessage = null
                 },
                 onEnableNotificationsClick = { enableReminderNotifications() },
+                onOpenNotificationSettingsClick = { openReminderNotificationSettings() },
+                onCheckNotificationStatusClick = { checkReminderNotificationStatus() },
                 onCheckReminderNowClick = {
                     scope.launch {
                         val result = ReminderNotificationCoordinator.evaluateAndNotify(context)
@@ -780,6 +829,8 @@ fun TaskReminderApp(
     areNotificationsAllowed: Boolean,
     onDismissReminderStatus: () -> Unit,
     onEnableNotificationsClick: () -> Unit,
+    onOpenNotificationSettingsClick: () -> Unit,
+    onCheckNotificationStatusClick: () -> Unit,
     onCheckReminderNowClick: () -> Unit,
     onReviewNowClick: () -> Unit,
     onSnoozeReminderClick: () -> Unit,
@@ -852,6 +903,7 @@ fun TaskReminderApp(
                     areNotificationsAllowed = areNotificationsAllowed,
                     onDismissReminderStatus = onDismissReminderStatus,
                     onEnableNotificationsClick = onEnableNotificationsClick,
+                    onOpenNotificationSettingsClick = onOpenNotificationSettingsClick,
                     onCheckReminderNowClick = onCheckReminderNowClick,
                     onReviewNowClick = onReviewNowClick,
                     onSnoozeReminderClick = onSnoozeReminderClick,
@@ -881,6 +933,12 @@ fun TaskReminderApp(
                     onQuietHoursStartChange = onQuietHoursStartChange,
                     onQuietHoursEndChange = onQuietHoursEndChange,
                     onThemeModeChange = onThemeModeChange,
+                    reminderStatusMessage = reminderStatusMessage,
+                    areNotificationsAllowed = areNotificationsAllowed,
+                    onDismissReminderStatus = onDismissReminderStatus,
+                    onEnableNotificationsClick = onEnableNotificationsClick,
+                    onOpenNotificationSettingsClick = onOpenNotificationSettingsClick,
+                    onCheckNotificationStatusClick = onCheckNotificationStatusClick,
                     usageAccessSnapshot = usageAccessSnapshot,
                     usageAccessStatusMessage = usageAccessStatusMessage,
                     onCheckUsageAccessClick = onCheckUsageAccessClick,
@@ -897,6 +955,7 @@ fun TaskReminderApp(
                     areNotificationsAllowed = areNotificationsAllowed,
                     onDismissReminderStatus = onDismissReminderStatus,
                     onEnableNotificationsClick = onEnableNotificationsClick,
+                    onOpenNotificationSettingsClick = onOpenNotificationSettingsClick,
                     onCheckReminderNowClick = onCheckReminderNowClick,
                     onReviewNowClick = onReviewNowClick,
                     onSnoozeReminderClick = onSnoozeReminderClick,
@@ -917,6 +976,7 @@ private fun TodayScreen(
     areNotificationsAllowed: Boolean,
     onDismissReminderStatus: () -> Unit,
     onEnableNotificationsClick: () -> Unit,
+    onOpenNotificationSettingsClick: () -> Unit,
     onCheckReminderNowClick: () -> Unit,
     onReviewNowClick: () -> Unit,
     onSnoozeReminderClick: () -> Unit,
@@ -1011,11 +1071,25 @@ private fun TodayScreen(
                     )
                 }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = onEnableNotificationsClick) {
-                        Text("Enable")
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (!areNotificationsAllowed) {
+                        OutlinedButton(
+                            onClick = onEnableNotificationsClick,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text("Enable")
+                        }
+                        OutlinedButton(
+                            onClick = onOpenNotificationSettingsClick,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text("Open settings")
+                        }
                     }
-                    Button(onClick = onCheckReminderNowClick) {
+                    Button(
+                        onClick = onCheckReminderNowClick,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
                         Text("Check now")
                     }
                 }
@@ -1392,6 +1466,12 @@ private fun SettingsScreen(
     onQuietHoursStartChange: (Int) -> Unit,
     onQuietHoursEndChange: (Int) -> Unit,
     onThemeModeChange: (ThemeMode) -> Unit,
+    reminderStatusMessage: String?,
+    areNotificationsAllowed: Boolean,
+    onDismissReminderStatus: () -> Unit,
+    onEnableNotificationsClick: () -> Unit,
+    onOpenNotificationSettingsClick: () -> Unit,
+    onCheckNotificationStatusClick: () -> Unit,
     usageAccessSnapshot: UsageAccessDiagnosticSnapshot,
     usageAccessStatusMessage: String?,
     onCheckUsageAccessClick: () -> Unit,
@@ -1448,6 +1528,15 @@ private fun SettingsScreen(
             }
         }
 
+        NotificationRecoveryCard(
+            reminderStatusMessage = reminderStatusMessage,
+            areNotificationsAllowed = areNotificationsAllowed,
+            onDismissReminderStatus = onDismissReminderStatus,
+            onEnableNotificationsClick = onEnableNotificationsClick,
+            onOpenNotificationSettingsClick = onOpenNotificationSettingsClick,
+            onCheckNotificationStatusClick = onCheckNotificationStatusClick,
+        )
+
         ScreenActivityDiagnosticsCard(
             usageAccessSnapshot = usageAccessSnapshot,
             usageAccessStatusMessage = usageAccessStatusMessage,
@@ -1456,6 +1545,98 @@ private fun SettingsScreen(
             onScanScreenActivityClick = onScanScreenActivityClick,
             onDismissUsageAccessStatus = onDismissUsageAccessStatus,
         )
+    }
+}
+
+@Composable
+private fun NotificationRecoveryCard(
+    reminderStatusMessage: String?,
+    areNotificationsAllowed: Boolean,
+    onDismissReminderStatus: () -> Unit,
+    onEnableNotificationsClick: () -> Unit,
+    onOpenNotificationSettingsClick: () -> Unit,
+    onCheckNotificationStatusClick: () -> Unit,
+) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Notifications,
+                    contentDescription = null,
+                    tint = if (areNotificationsAllowed) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.error
+                    },
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Notification recovery",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = if (areNotificationsAllowed) {
+                            "Notifications are enabled. Reminder checks can post standard Android notifications."
+                        } else {
+                            "Notifications are off. Android will block reminders until notifications are allowed."
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            if (!areNotificationsAllowed) {
+                ListItem(
+                    headlineContent = { Text("How to recover") },
+                    supportingContent = {
+                        Text(
+                            "Tap Enable first. If Android does not show a prompt, open Android settings and turn on notifications for this app.",
+                        )
+                    },
+                )
+            }
+
+            if (!reminderStatusMessage.isNullOrBlank()) {
+                ListItem(
+                    headlineContent = { Text(reminderStatusMessage) },
+                    trailingContent = {
+                        OutlinedButton(onClick = onDismissReminderStatus) {
+                            Text("Dismiss")
+                        }
+                    },
+                )
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = onEnableNotificationsClick,
+                    enabled = !areNotificationsAllowed,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Enable notifications")
+                }
+                OutlinedButton(
+                    onClick = onOpenNotificationSettingsClick,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Open Android settings")
+                }
+                OutlinedButton(
+                    onClick = onCheckNotificationStatusClick,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Check status")
+                }
+            }
+        }
     }
 }
 

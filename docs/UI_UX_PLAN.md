@@ -77,7 +77,7 @@ Current implementation: `UX-001` uses a skippable first-run flow gated by DataSt
 
 - `UX-001`: Build guided first-run onboarding. Implemented as a skippable first-run flow with Google Tasks setup, notification setup, and default reminder confirmation.
 - `UX-002`: Add polished empty and error states. Implemented for Today and Tasks with sign-in, first-sync, all-caught-up, and recoverable sync-error states.
-- `UX-003`: Add notification permission recovery screen.
+- `UX-003`: Add notification permission recovery screen. Implemented in Settings with status, Enable, Open Android settings, and Check status actions.
 - `UX-004`: Add manual sync and last synced feedback.
 - `UX-005`: Add task-list filtering.
 

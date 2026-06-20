@@ -143,6 +143,10 @@ Automatic reminder scheduling uses unique one-time WorkManager work rather than 
 
 V1 reminder timing is based on elapsed review state, pending cached tasks, snooze, quiet hours, and Android background scheduling. It does not measure real cross-app screen activity.
 
+### Notification Permission Recovery
+
+The app keeps notification recovery in the UI layer. Today and Settings can request the standard `POST_NOTIFICATIONS` permission, and Settings can open Android app notification settings when Android no longer shows the runtime prompt. Returning from Android settings refreshes `ReminderNotificationCoordinator.areNotificationsEnabled` and schedules the next reminder check. This does not add new reminder rules or advanced permissions.
+
 The `screenactivity` package owns the Usage Access feasibility spike. It can check Usage Access, open Android Usage Access settings, and count recent target `UsageStatsManager` events from a Settings diagnostics card. It does not feed reminders yet.
 
 ### Sync Flow

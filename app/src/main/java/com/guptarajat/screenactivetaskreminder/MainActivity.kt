@@ -50,6 +50,8 @@ private fun TaskReminderHomeScreenPreview() {
             areNotificationsAllowed = false,
             onDismissReminderStatus = {},
             onEnableNotificationsClick = {},
+            onOpenNotificationSettingsClick = {},
+            onCheckNotificationStatusClick = {},
             onCheckReminderNowClick = {},
             onReviewNowClick = {},
             onSnoozeReminderClick = {},
