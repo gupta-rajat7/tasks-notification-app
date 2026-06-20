@@ -48,6 +48,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -93,9 +94,11 @@ import com.guptarajat.screenactivetaskreminder.settings.MAX_REMINDER_INTERVAL_MI
 import com.guptarajat.screenactivetaskreminder.settings.MAX_SNOOZE_MINUTES
 import com.guptarajat.screenactivetaskreminder.settings.MIN_REMINDER_INTERVAL_MINUTES
 import com.guptarajat.screenactivetaskreminder.settings.MIN_SNOOZE_MINUTES
+import com.guptarajat.screenactivetaskreminder.settings.QUIET_HOURS_STEP_MINUTES
 import com.guptarajat.screenactivetaskreminder.settings.SettingsStore
 import com.guptarajat.screenactivetaskreminder.settings.TaskReminderSettings
 import com.guptarajat.screenactivetaskreminder.settings.ThemeMode
+import com.guptarajat.screenactivetaskreminder.settings.formatMinuteOfDay
 import com.guptarajat.screenactivetaskreminder.sync.GoogleTasksAuthorizationClient
 import com.guptarajat.screenactivetaskreminder.sync.GoogleTasksAuthorizationResult
 import com.guptarajat.screenactivetaskreminder.sync.userMessage as googleTasksAuthorizationUserMessage
@@ -380,6 +383,15 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
             onSnoozeMinutesChange = { value ->
                 scope.launch { settingsStore.setSnoozeMinutes(value) }
             },
+            onQuietHoursEnabledChange = { value ->
+                scope.launch { settingsStore.setQuietHoursEnabled(value) }
+            },
+            onQuietHoursStartChange = { value ->
+                scope.launch { settingsStore.setQuietHoursStartMinuteOfDay(value) }
+            },
+            onQuietHoursEndChange = { value ->
+                scope.launch { settingsStore.setQuietHoursEndMinuteOfDay(value) }
+            },
             onThemeModeChange = { value ->
                 scope.launch { settingsStore.setThemeMode(value) }
             },
@@ -412,6 +424,9 @@ fun TaskReminderApp(
     onSnoozeReminderClick: () -> Unit,
     onReminderIntervalChange: (Int) -> Unit,
     onSnoozeMinutesChange: (Int) -> Unit,
+    onQuietHoursEnabledChange: (Boolean) -> Unit,
+    onQuietHoursStartChange: (Int) -> Unit,
+    onQuietHoursEndChange: (Int) -> Unit,
     onThemeModeChange: (ThemeMode) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -491,6 +506,9 @@ fun TaskReminderApp(
                     onDismissAuthStatus = onDismissAuthStatus,
                     onReminderIntervalChange = onReminderIntervalChange,
                     onSnoozeMinutesChange = onSnoozeMinutesChange,
+                    onQuietHoursEnabledChange = onQuietHoursEnabledChange,
+                    onQuietHoursStartChange = onQuietHoursStartChange,
+                    onQuietHoursEndChange = onQuietHoursEndChange,
                     onThemeModeChange = onThemeModeChange,
                 )
 
@@ -770,6 +788,9 @@ private fun SettingsScreen(
     onDismissAuthStatus: () -> Unit,
     onReminderIntervalChange: (Int) -> Unit,
     onSnoozeMinutesChange: (Int) -> Unit,
+    onQuietHoursEnabledChange: (Boolean) -> Unit,
+    onQuietHoursStartChange: (Int) -> Unit,
+    onQuietHoursEndChange: (Int) -> Unit,
     onThemeModeChange: (ThemeMode) -> Unit,
 ) {
     AppScreenScaffold(section = appSectionForRoute(SETTINGS_ROUTE)) {
@@ -807,6 +828,12 @@ private fun SettingsScreen(
                     onIncrease = {
                         onSnoozeMinutesChange(settings.snoozeMinutes + 5)
                     },
+                )
+                QuietHoursSetting(
+                    settings = settings,
+                    onQuietHoursEnabledChange = onQuietHoursEnabledChange,
+                    onQuietHoursStartChange = onQuietHoursStartChange,
+                    onQuietHoursEndChange = onQuietHoursEndChange,
                 )
                 ThemeSetting(
                     selectedThemeMode = settings.themeMode,
@@ -883,6 +910,58 @@ private fun GoogleAccountCard(
             }
         }
     }
+}
+
+@Composable
+private fun QuietHoursSetting(
+    settings: TaskReminderSettings,
+    onQuietHoursEnabledChange: (Boolean) -> Unit,
+    onQuietHoursStartChange: (Int) -> Unit,
+    onQuietHoursEndChange: (Int) -> Unit,
+) {
+    ListItem(
+        headlineContent = { Text("Quiet hours") },
+        supportingContent = {
+            Text(
+                if (settings.quietHoursEnabled) {
+                    "${formatMinuteOfDay(settings.quietHoursStartMinuteOfDay)} to " +
+                        formatMinuteOfDay(settings.quietHoursEndMinuteOfDay)
+                } else {
+                    "Off"
+                },
+            )
+        },
+        trailingContent = {
+            Switch(
+                checked = settings.quietHoursEnabled,
+                onCheckedChange = onQuietHoursEnabledChange,
+            )
+        },
+    )
+    StepperSetting(
+        title = "Quiet hours start",
+        valueText = formatMinuteOfDay(settings.quietHoursStartMinuteOfDay),
+        canDecrease = true,
+        canIncrease = true,
+        onDecrease = {
+            onQuietHoursStartChange(settings.quietHoursStartMinuteOfDay - QUIET_HOURS_STEP_MINUTES)
+        },
+        onIncrease = {
+            onQuietHoursStartChange(settings.quietHoursStartMinuteOfDay + QUIET_HOURS_STEP_MINUTES)
+        },
+    )
+    StepperSetting(
+        title = "Quiet hours end",
+        valueText = formatMinuteOfDay(settings.quietHoursEndMinuteOfDay),
+        canDecrease = true,
+        canIncrease = true,
+        onDecrease = {
+            onQuietHoursEndChange(settings.quietHoursEndMinuteOfDay - QUIET_HOURS_STEP_MINUTES)
+        },
+        onIncrease = {
+            onQuietHoursEndChange(settings.quietHoursEndMinuteOfDay + QUIET_HOURS_STEP_MINUTES)
+        },
+    )
 }
 
 @Composable

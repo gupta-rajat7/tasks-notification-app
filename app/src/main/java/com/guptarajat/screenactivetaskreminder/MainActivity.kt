@@ -54,6 +54,9 @@ private fun TaskReminderHomeScreenPreview() {
             onSnoozeReminderClick = {},
             onReminderIntervalChange = {},
             onSnoozeMinutesChange = {},
+            onQuietHoursEnabledChange = {},
+            onQuietHoursStartChange = {},
+            onQuietHoursEndChange = {},
             onThemeModeChange = {},
         )
     }

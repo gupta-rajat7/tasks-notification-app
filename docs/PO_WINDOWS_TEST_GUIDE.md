@@ -82,10 +82,13 @@ $env:GRADLE_USER_HOME='C:\tmp\task-reminder-dev\gradle-home'
 - App opens without crashing.
 - Bottom navigation has Today, Tasks, and Settings.
 - Settings can be changed and still remain after closing and reopening the app.
+- Settings > Quiet hours can be turned on and off.
+- Settings > Quiet hours start and end can be changed.
 - Google sign-in button starts a sign-in flow.
 - If sign-in cannot complete, note the exact message shown.
 - Today > Enable turns on notification permission when Android asks.
 - Today > Check now shows a reminder notification when pending tasks are cached and eligible.
+- Today > Check now does not show a notification during active quiet hours.
 - Reminder notification has Review, Snooze, and Done for now actions.
 - Snooze removes the visible notification.
 - Done for now removes the visible notification.

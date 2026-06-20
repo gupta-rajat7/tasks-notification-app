@@ -84,6 +84,11 @@ object ReminderNotificationCoordinator {
                 reminderIntervalMinutes = settings.reminderIntervalMinutes,
                 lastReviewedAtMillis = settings.lastReviewedAtMillis,
                 snoozedUntilMillis = settings.snoozedUntilMillis,
+                quietHours = QuietHours(
+                    isEnabled = settings.quietHoursEnabled,
+                    startMinuteOfDay = settings.quietHoursStartMinuteOfDay,
+                    endMinuteOfDay = settings.quietHoursEndMinuteOfDay,
+                ),
             ),
         )
 
