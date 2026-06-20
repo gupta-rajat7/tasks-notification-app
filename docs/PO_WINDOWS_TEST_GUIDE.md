@@ -25,7 +25,7 @@ cd 'C:\Users\Tanu Gupta\Documents\Tasks Notification App'
 ```powershell
 $env:JAVA_HOME='C:\tmp\task-reminder-dev\jdk\jdk-17.0.19+10'
 $env:ANDROID_SDK_ROOT='C:\tmp\task-reminder-dev\android-sdk'
-$env:ANDROID_AVD_HOME='C:\tmp\task-reminder-dev\avd-home'
+$env:ANDROID_AVD_HOME="$env:USERPROFILE\.android\avd"
 $env:GRADLE_USER_HOME='C:\tmp\task-reminder-dev\gradle-home'
 ```
 
@@ -91,12 +91,16 @@ $env:GRADLE_USER_HOME='C:\tmp\task-reminder-dev\gradle-home'
 - Google sign-in button starts a sign-in flow.
 - If sign-in cannot complete, note the exact message shown.
 - Today > Enable turns on notification permission when Android asks.
+- Today > Open settings opens Android notification settings when notifications were skipped or denied.
 - Today > Check now shows a reminder notification when pending tasks are cached and eligible.
 - Today > Check now does not show a notification during active quiet hours.
 - Automatic reminder checks are scheduled after app startup, Settings reminder changes, Review now, Snooze, and Google Tasks sync.
 - For quick testing, use Today > Check now. Waiting for the automatic reminder may take longer than the configured interval because Android schedules background work to protect battery.
 - The current V1 app does not yet measure real cross-app screen activity. That remains a future optional Usage Access feature.
 - Settings > Screen activity diagnostics can check Usage Access, open Android Usage Access settings, and scan recent activity event counts for the `SCR-001` feasibility spike.
+- Settings > Notification recovery shows whether reminders can post notifications.
+- Settings > Notification recovery > Open Android settings opens Android app notification settings.
+- Settings > Notification recovery > Check status updates the status after returning from Android settings.
 - Reminder notification has Review, Snooze, and Done for now actions.
 - Snooze removes the visible notification.
 - Done for now removes the visible notification.

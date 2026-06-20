@@ -188,6 +188,19 @@ Acceptance criteria:
 - Offline state is clear.
 - Auth failure state is recoverable.
 
+### UX-003: Notification Permission Recovery
+
+Add a Settings recovery surface for users who skipped or denied notification permission.
+
+Status: Complete in `docs/handoffs/2026-06-20-UX-003-notification-permission-recovery.md`.
+
+Acceptance criteria:
+
+- Settings explains whether reminder notifications are enabled.
+- User can request notification permission again when Android allows it.
+- User can open Android app notification settings when the prompt is unavailable.
+- User can recheck notification status after returning to the app.
+
 ### MON-001: Pro Unlock Design
 
 Document and design the Pro feature gate. Do not implement billing yet.

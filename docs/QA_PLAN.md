@@ -49,6 +49,9 @@
 - Automatic reminder timing is best-effort; Android may delay checks while the app is idle, battery saver is active, or the app was force-stopped.
 - V1 reminders do not measure real cross-app screen activity yet.
 - Settings > Screen activity diagnostics can check Usage Access and scan recent target event counts.
+- Settings > Notification recovery explains whether notifications are enabled.
+- Settings > Notification recovery can open Android notification settings if notification permission was skipped or denied.
+- Settings > Notification recovery Check status reflects the current Android notification setting.
 - Notification contains Review, Snooze, and Done for now actions.
 - Snooze suppresses reminders until snooze expires.
 - Review action opens the app.
@@ -82,6 +85,16 @@ Manual checks for `UX-002`:
 - Signed in, sync failed: Tasks shows a recoverable sync-error card with Try again.
 - Synced with zero pending tasks: Today and Tasks show no-pending task copy instead of a blank list.
 - Synced with pending tasks: task cards render without the empty-state cards.
+
+## UX Notification Recovery
+
+Manual checks for `UX-003`:
+
+- With notifications off, Today shows Enable, Open settings, and Check now without crowding the card.
+- With notifications off, Settings shows Notification recovery with recovery instructions.
+- Settings > Notification recovery > Enable requests notification permission when Android allows a prompt.
+- Settings > Notification recovery > Open Android settings opens the app's Android notification settings or app settings fallback.
+- After returning from Android settings, Settings > Notification recovery > Check status shows whether notifications are enabled.
 
 ## Device Coverage
 
