@@ -11,6 +11,7 @@ Mitigation:
 - Do not use AccessibilityService in V1.
 - Use notification-first reminders.
 - Revisit only if the product truly requires stronger usage signals.
+- Prefer optional Usage Access over AccessibilityService if real screen activity is approved later.
 
 ## RISK-002: Intrusive Overlay Experience
 
@@ -46,6 +47,20 @@ Mitigation:
 - Use WorkManager for reliable background sync.
 - Keep reminder logic conservative.
 - Avoid claiming exact real-time behavior.
+
+## RISK-008: Usage Access Onboarding And Privacy Risk
+
+Status: Open.
+
+Description: Real cross-app screen-activity detection likely requires Usage Access. This adds setup friction and gives the app access to sensitive device usage signals.
+
+Mitigation:
+
+- Keep Usage Access out of V1 first-run onboarding.
+- Add it only as an optional advanced mode after product approval.
+- Explain the permission before opening Android settings.
+- Store derived reminder state instead of raw per-app usage history.
+- Keep the app useful when the user declines the permission.
 
 ## RISK-005: First-App Complexity
 

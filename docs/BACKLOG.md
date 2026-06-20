@@ -136,6 +136,34 @@ Acceptance criteria:
 - Scheduling remains conservative and avoids exact-alarm permission unless explicitly approved.
 - Scheduled checks are best-effort under Android background limits; V1 does not guarantee exact delivery at the configured minute.
 
+## P2: Screen Activity Detection
+
+### SCR-001: Usage Access Feasibility Spike
+
+Validate whether optional Android Usage Access can support the product promise of reminders after real phone activity.
+
+Acceptance criteria:
+
+- No Usage Access permission is requested during first-run onboarding.
+- Spike checks whether Usage Access is granted.
+- Spike can open Android Usage Access settings with a safe fallback if no matching settings activity exists.
+- Spike reads recent `UsageStatsManager` events locally on-device.
+- Spike verifies whether `SCREEN_INTERACTIVE`, `SCREEN_NON_INTERACTIVE`, `ACTIVITY_RESUMED`, and `ACTIVITY_PAUSED` events are available on the Windows emulator.
+- Results are documented with a recommendation: proceed, limit to physical-device testing, or reject.
+
+### SCR-002: Optional Screen Activity Mode
+
+Add user-facing optional screen-activity reminders only if `SCR-001` proves the approach is reliable enough.
+
+Acceptance criteria:
+
+- User can enable or skip the optional mode from Settings.
+- The permission explanation appears before Android settings opens.
+- The app remains usable without Usage Access.
+- Raw per-app usage history is not persisted.
+- Derived active-session state feeds the existing reminder engine.
+- Play Store disclosure and privacy docs are updated before release.
+
 ## P2: Product Polish
 
 ### UX-001: Onboarding Flow

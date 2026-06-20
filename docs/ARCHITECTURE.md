@@ -137,6 +137,8 @@ The Settings screen configures quiet-hours start and end in hourly steps. The re
 
 Automatic reminder scheduling uses unique one-time WorkManager work rather than exact alarms. The app does not request exact-alarm permission, battery-exemption permission, Usage Access, AccessibilityService, or overlay permission for V1 reminder scheduling. Timing is best-effort under Android background limits and may be delayed by Doze, app standby, battery saver, or force-stop.
 
+V1 reminder timing is based on elapsed review state, pending cached tasks, snooze, quiet hours, and Android background scheduling. It does not measure real cross-app screen activity.
+
 ### Sync Flow
 
 1. User starts sync from the Tasks screen.
@@ -179,7 +181,7 @@ These permissions increase setup friction and store-policy risk.
 
 ## Future Architecture Options
 
-V2 may evaluate optional Usage Access for stronger screen-use detection.
+V2 may evaluate optional Usage Access for stronger screen-use detection. If approved, the implementation should live behind an explicit Settings or onboarding-later screen and use `UsageStatsManager` locally on-device. It should reuse `ReminderRules`, `ReminderNotificationCoordinator`, and `ReminderScheduler` rather than creating a parallel reminder engine.
 
-AccessibilityService should be a last resort. If added, it needs prominent disclosure, explicit consent, a narrow purpose, and Play Console declaration handling.
+AccessibilityService should be a last resort. If added, it needs prominent disclosure, explicit consent, a narrow purpose, and Play Console declaration handling. See `docs/adr/0005-optional-usage-access-for-screen-activity.md`.
 

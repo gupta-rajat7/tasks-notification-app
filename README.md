@@ -1,6 +1,6 @@
 # Screen Active Task Reminder
 
-Android productivity app that reminds users to review pending tasks when they have been screen-active for a configurable period.
+Android productivity app that reminds users to review pending tasks after a configurable review interval. Optional real screen-activity detection is planned as a later advanced mode after permission and Play Store risk are validated.
 
 The project is intentionally local-first, lightweight, and beginner-friendly:
 
@@ -15,7 +15,7 @@ The project is intentionally local-first, lightweight, and beginner-friendly:
 
 Build a free V1 that proves users want the behavior, then add a one-time Pro upgrade for advanced settings. Do not start with ads. Ads conflict with the product promise of reducing distraction.
 
-V1 should avoid AccessibilityService and forced overlays as default behavior. Those can be evaluated later as optional advanced features because they increase onboarding friction, privacy concerns, and store-policy risk.
+V1 should avoid Usage Access, AccessibilityService, and forced overlays as default behavior. Usage Access can be evaluated later as an optional advanced feature because it adds onboarding friction and sensitive-permission obligations. AccessibilityService should remain a last-resort path because it creates higher user-trust and Play Store policy risk for a general productivity app.
 
 ## Project Docs
 

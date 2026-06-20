@@ -83,6 +83,7 @@ Deliverables:
 - Lightweight UI/UX plan.
 - Error states.
 - Permission recovery UI.
+- Optional Usage Access feasibility decision for real screen-activity detection.
 - Basic manual QA pass.
 - Privacy policy draft.
 - Store listing draft.
