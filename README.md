@@ -24,6 +24,7 @@ V1 must not make Usage Access, AccessibilityService, or forced overlays part of 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Project Status](docs/PROJECT_STATUS.md)
 - [Screen Activity Feasibility](docs/SCREEN_ACTIVITY_FEASIBILITY.md)
+- [Product Owner Google OAuth Setup Guide](docs/PO_GOOGLE_OAUTH_SETUP_GUIDE.md)
 - [Google Sign-In Setup](docs/GOOGLE_SIGN_IN_SETUP.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Backlog](docs/BACKLOG.md)

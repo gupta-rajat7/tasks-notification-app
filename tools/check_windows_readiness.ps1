@@ -13,6 +13,7 @@ $expectedAndroidSdk = Join-Path $expectedDevRoot "android-sdk"
 $expectedGradleHome = Join-Path $expectedDevRoot "gradle-home"
 $fallbackGradleHome = Join-Path $repoRoot ".gradle-home"
 $expectedAvdName = "TaskReminder_API35"
+$webClientIdPattern = "^[A-Za-z0-9._-]+\.apps\.googleusercontent\.com$"
 
 $script:failures = 0
 $script:warnings = 0
@@ -213,12 +214,15 @@ if ($androidSdkIsValid) {
 }
 
 $webClientId = Get-LocalProperty "google.web.client.id"
-if ($webClientId) {
-    Write-Result "PASS" "Google Web Client ID" "local.properties contains google.web.client.id"
-} elseif ($env:GOOGLE_WEB_CLIENT_ID) {
-    Write-Result "PASS" "Google Web Client ID" "GOOGLE_WEB_CLIENT_ID environment variable is set"
+if (-not $webClientId) {
+    $webClientId = $env:GOOGLE_WEB_CLIENT_ID
+}
+if ($webClientId -and ($webClientId -match $webClientIdPattern)) {
+    Write-Result "PASS" "Google Web Client ID" "configured"
+} elseif ($webClientId) {
+    Write-Result "FAIL" "Google Web Client ID" "value is present but does not look like a Web OAuth client ID"
 } else {
-    Write-Result "WARN" "Google Web Client ID" "Google sign-in will show setup message; see docs\PO_GOOGLE_OAUTH_SETUP_GUIDE.md"
+    Write-Result "WARN" "Google Web Client ID" "run tools\setup_google_oauth.ps1 after creating the Web OAuth client"
 }
 
 if (-not $SkipGitHub) {

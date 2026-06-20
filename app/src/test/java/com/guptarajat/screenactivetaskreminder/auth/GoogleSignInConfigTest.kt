@@ -27,4 +27,13 @@ class GoogleSignInConfigTest {
             ).isConfigured,
         )
     }
+
+    @Test
+    fun malformedWebClientIdIsNotConfigured() {
+        assertFalse(
+            GoogleSignInConfig(
+                webClientId = "not-a-google-client-id",
+            ).isConfigured,
+        )
+    }
 }

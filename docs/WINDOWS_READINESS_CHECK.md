@@ -62,6 +62,12 @@ If you see:
 
 the app can still open, but real Google sign-in is not ready. Use `docs\PO_GOOGLE_OAUTH_SETUP_GUIDE.md`.
 
+After the Google Cloud Web OAuth client exists, run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\setup_google_oauth.ps1 -WebClientId 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com'
+```
+
 ### GitHub Auth Warning
 
 If you see:

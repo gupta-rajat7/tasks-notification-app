@@ -28,48 +28,32 @@ The Android app has a working local V1 foundation:
 - Owner run/test guides and Play Store preparation docs.
 - Windows readiness checker for local setup diagnostics.
 - One-command Windows run script and E2E readiness guide.
+- Google OAuth local setup helper for debug SHA-1 and Web Client ID configuration.
 
 ## Current Blockers
 
 ### Google Sign-In
 
-Real Google sign-in still needs product-owner Google Cloud OAuth setup:
+The app-side Google authentication process is implemented. Real Google sign-in still needs product-owner Google Cloud OAuth setup:
 
 - Enable Google Tasks API.
 - Configure OAuth consent screen.
 - Create Android OAuth client.
 - Add this Windows machine debug SHA-1.
 - Create Web OAuth client.
-- Put the Web Client ID in local `local.properties`.
+- Save the Web Client ID locally with `tools/setup_google_oauth.ps1`.
 
 Use `docs/PO_GOOGLE_OAUTH_SETUP_GUIDE.md`.
 
 ### GitHub Sync
 
-This Codex session has local commits that are not pushed because Git/GitHub credentials are unavailable in the session.
+GitHub `main` was synced through PR #20 on 2026-06-20.
 
-The current local branch is:
+Latest merged main commit:
 
-`codex-open-readiness-docs-monetization-oauth`
+- `bb165d5 Merge pull request #20 from gupta-rajat7/codex-open-readiness-docs-monetization-oauth`
 
-The latest local commits include:
-
-- `c80ac4e Add OAuth and monetization readiness docs`
-- `75175c3 Add Windows run app guide`
-- `2d3ee3c Polish empty and error states`
-- `87543dc Add optional screen activity reminder mode`
-- `75f57ee Update project status tracking`
-- `9cc8668 Align screen activity documentation`
-- `e5fc175 Add Windows readiness checker`
-
-Run this in PowerShell to refresh GitHub auth:
-
-```powershell
-gh auth logout -h github.com -u gupta-rajat7
-gh auth login -h github.com
-```
-
-After auth is fixed, Codex should push the branch, open a PR, merge to `main`, and confirm GitHub is in sync.
+Current new work, if any, should be pushed through a fresh `codex/` branch and PR.
 
 ## Next Product Owner Tests
 
@@ -79,11 +63,13 @@ Use `docs/WINDOWS_READINESS_CHECK.md` first when you want one command to check J
 
 Use `docs/E2E_TEST_READINESS.md` for the current ready/not-ready verdict and the fastest app launch command.
 
+Use `docs/PO_GOOGLE_OAUTH_SETUP_GUIDE.md` to finish Google sign-in setup.
+
 Then use `docs/PO_WINDOWS_TEST_GUIDE.md` and focus on:
 
 - App opens and navigation works.
 - Settings controls respond quickly.
-- Google sign-in setup message is understood until OAuth is configured.
+- Google sign-in setup helper prints the debug SHA-1 and saves the Web Client ID after Google Cloud setup.
 - Notification permission recovery works.
 - Today > Check now gives understandable results.
 - Optional screen activity mode can be toggled from Settings.
@@ -93,6 +79,7 @@ Then use `docs/PO_WINDOWS_TEST_GUIDE.md` and focus on:
 Before external testers:
 
 - Complete Google Cloud OAuth setup.
+- Run `tools/setup_google_oauth.ps1` with the Web OAuth Client ID.
 - Retest Google sign-in and Google Tasks sync with a real account.
 - Test on one physical Android phone.
 - Review privacy policy draft.

@@ -39,21 +39,27 @@ Do not share OAuth client secrets. This Android app needs the Web Client ID, not
 
 ## Debug SHA-1 For This Windows Machine
 
-Run this in PowerShell after setting `JAVA_HOME`:
+Run this in PowerShell:
 
 ```powershell
 cd 'C:\Users\Tanu Gupta\Documents\Tasks Notification App'
-$env:JAVA_HOME='C:\tmp\task-reminder-dev\jdk\jdk-17.0.19+10'
-& "$env:JAVA_HOME\bin\keytool.exe" -list -v -alias androiddebugkey -keystore "$env:USERPROFILE\.android\debug.keystore" -storepass android -keypass android
+powershell -ExecutionPolicy Bypass -File .\tools\setup_google_oauth.ps1 -PrintDebugSha1
 ```
 
-Copy the `SHA1:` value into the Android OAuth client in Google Cloud Console.
+Copy the printed SHA-1 value into the Android OAuth client in Google Cloud Console.
 
 ## Local App Configuration
 
-The app now reads the Google Web Client ID from local-only configuration.
+The app reads the Google Web Client ID from local-only configuration.
 
-Add this line to `local.properties` on the Windows machine:
+After creating the Web OAuth client, run this in PowerShell:
+
+```powershell
+cd 'C:\Users\Tanu Gupta\Documents\Tasks Notification App'
+powershell -ExecutionPolicy Bypass -File .\tools\setup_google_oauth.ps1 -WebClientId 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com'
+```
+
+The setup helper validates the ID format and saves this local-only line to `local.properties`:
 
 ```properties
 google.web.client.id=YOUR_WEB_CLIENT_ID.apps.googleusercontent.com
@@ -67,7 +73,11 @@ Alternative for one PowerShell session:
 $env:GOOGLE_WEB_CLIENT_ID='YOUR_WEB_CLIENT_ID.apps.googleusercontent.com'
 ```
 
-After adding the value, rebuild and reinstall the app.
+After adding the value, rebuild and reinstall the app:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\run_app_windows.ps1 -StartEmulator
+```
 
 ## What The App Should Do After Setup
 
