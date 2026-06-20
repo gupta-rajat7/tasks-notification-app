@@ -50,6 +50,23 @@ Notes:
 Recommendation: proceed / physical-device-only / reject
 ```
 
+## Emulator Smoke Test Result
+
+Date: 2026-06-20
+
+```text
+Device: TaskReminder_API35 emulator, Android SDK built for x86_64
+Android version: 15 / API 35
+Usage Access enabled: yes, via emulator app-op smoke test
+Total events: 198
+SCREEN_INTERACTIVE: 1
+SCREEN_NON_INTERACTIVE: 0
+ACTIVITY_RESUMED: 4
+ACTIVITY_PAUSED: 4
+Notes: The Settings diagnostics card refreshed from off to enabled after Check access. Scan recent activity returned local UsageStatsManager events and displayed all four target rows. SCREEN_NON_INTERACTIVE stayed at 0 during this short headless emulator run because the screen was not turned off during the test.
+Recommendation: proceed to physical-device validation before building SCR-002
+```
+
 ## Decision Gate For SCR-002
 
 Build `SCR-002: Optional Screen Activity Mode` only if:

@@ -41,6 +41,8 @@ $env:GRADLE_USER_HOME='C:\tmp\task-reminder-dev\gradle-home'
 .\gradlew.bat --offline --no-daemon --max-workers=1 --console=plain '-Pkotlin.compiler.execution.strategy=in-process' :app:assembleDebug
 git diff --check
 adb devices
+adb install -r app\build\outputs\apk\debug\app-debug.apk
+adb shell appops set com.guptarajat.screenactivetaskreminder GET_USAGE_STATS allow
 ```
 
 Result:
@@ -49,7 +51,12 @@ Result:
 - `:app:testDebugUnitTest`: passed.
 - `:app:assembleDebug`: passed; debug APK was built at `app/build/outputs/apk/debug/app-debug.apk`.
 - `git diff --check`: passed.
-- `adb devices`: Android SDK ADB is installed, but no emulator or physical device was attached during this slice.
+- Windows emulator `TaskReminder_API35` booted successfully.
+- Debug APK installed and launched on the emulator.
+- Installed package targets SDK 36 and declares `android.permission.PACKAGE_USAGE_STATS`.
+- Usage Access was enabled by emulator app-op for smoke testing.
+- Settings > Screen activity diagnostics showed enabled access and returned 198 usage events from the last 60 minutes.
+- Target event counts rendered on the emulator: `SCREEN_INTERACTIVE=1`, `SCREEN_NON_INTERACTIVE=0`, `ACTIVITY_RESUMED=4`, `ACTIVITY_PAUSED=4`.
 
 ## Open Questions
 
