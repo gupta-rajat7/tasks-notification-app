@@ -100,12 +100,15 @@ com.guptarajat.screenactivetaskreminder
 ### Onboarding Flow
 
 1. User opens app.
-2. App checks auth state.
-3. User signs in with Google.
-4. App requests notification permission.
-5. App performs first task sync.
-6. App writes default settings.
-7. User lands on Today.
+2. App reads `hasCompletedOnboarding` from DataStore settings.
+3. If onboarding is incomplete, the app shows a guided first-run flow.
+4. User can sign in with Google or continue and connect later from Settings.
+5. User can enable standard reminder notifications or continue and enable them later.
+6. App confirms default reminder settings.
+7. App writes onboarding completion to DataStore.
+8. User lands on Today.
+
+The onboarding flow intentionally does not request Usage Access, AccessibilityService, overlay permission, exact-alarm permission, or battery-exemption permission.
 
 ### Reminder Decision Flow
 

@@ -80,6 +80,10 @@ $env:GRADLE_USER_HOME='C:\tmp\task-reminder-dev\gradle-home'
 ## First Owner Test Checklist
 
 - App opens without crashing.
+- Fresh install opens guided setup.
+- Guided setup can be completed with Continue until Today opens.
+- Guided setup can be skipped with Set up later until Today opens.
+- After setup is complete, closing and reopening the app goes directly to Today.
 - Bottom navigation has Today, Tasks, and Settings.
 - Settings can be changed and still remain after closing and reopening the app.
 - Settings > Quiet hours can be turned on and off.

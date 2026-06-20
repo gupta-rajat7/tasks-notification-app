@@ -122,6 +122,47 @@ private val AppDestinations = listOf(
     AppDestination(appSectionForRoute(SETTINGS_ROUTE), Icons.Outlined.Settings),
 )
 
+private enum class OnboardingStep {
+    WELCOME,
+    GOOGLE_TASKS,
+    NOTIFICATIONS,
+    DEFAULT_REMINDERS,
+}
+
+private data class OnboardingStepCopy(
+    val icon: ImageVector,
+    val title: String,
+    val body: String,
+)
+
+private val OnboardingSteps = OnboardingStep.entries
+
+private fun onboardingStepCopy(step: OnboardingStep): OnboardingStepCopy = when (step) {
+    OnboardingStep.WELCOME -> OnboardingStepCopy(
+        icon = Icons.Outlined.CheckCircle,
+        title = "Review tasks before they drift",
+        body = "Screen Active Task Reminder keeps the first version simple: Google Tasks, local reminders, and standard Android notifications.",
+    )
+
+    OnboardingStep.GOOGLE_TASKS -> OnboardingStepCopy(
+        icon = Icons.Outlined.Sync,
+        title = "Connect Google Tasks",
+        body = "Sign in when you are ready. The app uses read-only Google Tasks access and stores the task cache on this device.",
+    )
+
+    OnboardingStep.NOTIFICATIONS -> OnboardingStepCopy(
+        icon = Icons.Outlined.Notifications,
+        title = "Allow reminder notifications",
+        body = "Notifications are the standard V1 reminder surface. You can keep using the app even if you skip this for now.",
+    )
+
+    OnboardingStep.DEFAULT_REMINDERS -> OnboardingStepCopy(
+        icon = Icons.Outlined.Settings,
+        title = "Start with calm defaults",
+        body = "The default reminder rhythm is ready. You can tune interval, snooze, quiet hours, and theme from Settings later.",
+    )
+}
+
 @Composable
 fun TaskReminderRoot(modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -251,6 +292,57 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
         }
     }
 
+    fun startGoogleSignIn() {
+        val activity = context.findActivity()
+        if (activity == null) {
+            authStatusMessage = "Google sign-in needs an active Android screen."
+        } else {
+            scope.launch {
+                isAuthActionInProgress = true
+                when (val result = googleSignInClient.signIn(activity)) {
+                    is GoogleSignInResult.Success -> {
+                        authStore.saveSession(result.session)
+                        authStatusMessage = "Signed in as ${result.session.displayLabel}."
+                    }
+                    else -> {
+                        authStatusMessage = result.userMessage()
+                    }
+                }
+                isAuthActionInProgress = false
+            }
+        }
+    }
+
+    fun enableReminderNotifications() {
+        if (
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            areNotificationsAllowed =
+                ReminderNotificationCoordinator.areNotificationsEnabled(context)
+            reminderStatusMessage = if (areNotificationsAllowed) {
+                "Notifications are enabled."
+            } else {
+                "Enable notifications in Android settings to receive reminders."
+            }
+            scope.launch {
+                scheduleNextReminderCheck()
+            }
+        }
+    }
+
+    fun completeOnboarding() {
+        scope.launch {
+            settingsStore.setOnboardingCompleted(true)
+            scheduleNextReminderCheck()
+        }
+    }
+
     TaskReminderTheme(
         darkTheme = when (settings.themeMode) {
             ThemeMode.SYSTEM -> systemDarkTheme
@@ -258,206 +350,415 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
             ThemeMode.DARK -> true
         },
     ) {
-        TaskReminderApp(
-            settings = settings,
-            authSession = authSession,
-            authStatusMessage = authStatusMessage,
-            isAuthActionInProgress = isAuthActionInProgress,
-            taskCacheSnapshot = taskCacheSnapshot,
-            syncStatusMessage = syncStatusMessage,
-            isTaskSyncInProgress = isTaskSyncInProgress,
-            onGoogleSignInClick = {
-                val activity = context.findActivity()
-                if (activity == null) {
-                    authStatusMessage = "Google sign-in needs an active Android screen."
-                } else {
+        if (!settings.hasCompletedOnboarding) {
+            OnboardingScreen(
+                settings = settings,
+                authSession = authSession,
+                authStatusMessage = authStatusMessage,
+                isAuthActionInProgress = isAuthActionInProgress,
+                areNotificationsAllowed = areNotificationsAllowed,
+                onGoogleSignInClick = { startGoogleSignIn() },
+                onDismissAuthStatus = { authStatusMessage = null },
+                onEnableNotificationsClick = { enableReminderNotifications() },
+                onFinishClick = { completeOnboarding() },
+                modifier = modifier,
+            )
+        } else {
+            TaskReminderApp(
+                settings = settings,
+                authSession = authSession,
+                authStatusMessage = authStatusMessage,
+                isAuthActionInProgress = isAuthActionInProgress,
+                taskCacheSnapshot = taskCacheSnapshot,
+                syncStatusMessage = syncStatusMessage,
+                isTaskSyncInProgress = isTaskSyncInProgress,
+                onGoogleSignInClick = { startGoogleSignIn() },
+                onGoogleSignOutClick = {
                     scope.launch {
                         isAuthActionInProgress = true
-                        when (val result = googleSignInClient.signIn(activity)) {
-                            is GoogleSignInResult.Success -> {
-                                authStore.saveSession(result.session)
-                                authStatusMessage = "Signed in as ${result.session.displayLabel}."
-                            }
-                            else -> {
-                                authStatusMessage = result.userMessage()
-                            }
-                        }
+                        runCatching { googleSignInClient.signOut() }
+                        authStore.clearSession()
+                        authStatusMessage = "Signed out."
                         isAuthActionInProgress = false
                     }
-                }
-            },
-            onGoogleSignOutClick = {
-                scope.launch {
-                    isAuthActionInProgress = true
-                    runCatching { googleSignInClient.signOut() }
-                    authStore.clearSession()
-                    authStatusMessage = "Signed out."
-                    isAuthActionInProgress = false
-                }
-            },
-            onGoogleTasksSyncClick = {
-                if (!authSession.isSignedIn) {
-                    syncStatusMessage = "Sign in with Google before syncing tasks."
-                } else {
-                    val activity = context.findActivity()
-                    if (activity == null) {
-                        syncStatusMessage = "Task sync needs an active Android screen."
+                },
+                onGoogleTasksSyncClick = {
+                    if (!authSession.isSignedIn) {
+                        syncStatusMessage = "Sign in with Google before syncing tasks."
                     } else {
-                        scope.launch {
-                            isTaskSyncInProgress = true
-                            syncStatusMessage = null
-                            pendingSyncAccountId = authSession.accountId
-                            when (
-                                val authorizationResult =
-                                    googleTasksAuthorizationClient.requestAccess(activity)
-                            ) {
-                                is GoogleTasksAuthorizationResult.Authorized -> {
-                                    syncGoogleTasks(
-                                        accessToken = authorizationResult.accessToken,
-                                        accountId = authSession.accountId,
-                                    )
-                                }
+                        val activity = context.findActivity()
+                        if (activity == null) {
+                            syncStatusMessage = "Task sync needs an active Android screen."
+                        } else {
+                            scope.launch {
+                                isTaskSyncInProgress = true
+                                syncStatusMessage = null
+                                pendingSyncAccountId = authSession.accountId
+                                when (
+                                    val authorizationResult =
+                                        googleTasksAuthorizationClient.requestAccess(activity)
+                                ) {
+                                    is GoogleTasksAuthorizationResult.Authorized -> {
+                                        syncGoogleTasks(
+                                            accessToken = authorizationResult.accessToken,
+                                            accountId = authSession.accountId,
+                                        )
+                                    }
 
-                                is GoogleTasksAuthorizationResult.NeedsUserConsent -> {
-                                    val request = IntentSenderRequest.Builder(
-                                        authorizationResult.pendingIntent.intentSender,
-                                    ).build()
-                                    runCatching {
-                                        tasksAuthorizationLauncher.launch(request)
-                                    }.onFailure { error ->
+                                    is GoogleTasksAuthorizationResult.NeedsUserConsent -> {
+                                        val request = IntentSenderRequest.Builder(
+                                            authorizationResult.pendingIntent.intentSender,
+                                        ).build()
+                                        runCatching {
+                                            tasksAuthorizationLauncher.launch(request)
+                                        }.onFailure { error ->
+                                            syncStatusMessage =
+                                                error.localizedMessage
+                                                    ?: "Google Tasks permission screen could not open."
+                                            isTaskSyncInProgress = false
+                                            pendingSyncAccountId = null
+                                        }
+                                    }
+
+                                    else -> {
                                         syncStatusMessage =
-                                            error.localizedMessage
-                                                ?: "Google Tasks permission screen could not open."
+                                            authorizationResult.googleTasksAuthorizationUserMessage()
+                                                ?: "Google Tasks permission was not granted."
                                         isTaskSyncInProgress = false
                                         pendingSyncAccountId = null
                                     }
                                 }
-
-                                else -> {
-                                    syncStatusMessage =
-                                        authorizationResult.googleTasksAuthorizationUserMessage()
-                                            ?: "Google Tasks permission was not granted."
-                                    isTaskSyncInProgress = false
-                                    pendingSyncAccountId = null
-                                }
                             }
                         }
                     }
-                }
-            },
-            onDismissAuthStatus = {
-                authStatusMessage = null
-            },
-            onDismissSyncStatus = {
-                syncStatusMessage = null
-            },
-            reminderStatusMessage = reminderStatusMessage,
-            areNotificationsAllowed = areNotificationsAllowed,
-            onDismissReminderStatus = {
-                reminderStatusMessage = null
-            },
-            onEnableNotificationsClick = {
-                if (
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                    ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.POST_NOTIFICATIONS,
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                } else {
-                    areNotificationsAllowed =
-                        ReminderNotificationCoordinator.areNotificationsEnabled(context)
-                    reminderStatusMessage = if (areNotificationsAllowed) {
-                        "Notifications are enabled."
-                    } else {
-                        "Enable notifications in Android settings to receive reminders."
-                    }
+                },
+                onDismissAuthStatus = {
+                    authStatusMessage = null
+                },
+                onDismissSyncStatus = {
+                    syncStatusMessage = null
+                },
+                reminderStatusMessage = reminderStatusMessage,
+                areNotificationsAllowed = areNotificationsAllowed,
+                onDismissReminderStatus = {
+                    reminderStatusMessage = null
+                },
+                onEnableNotificationsClick = { enableReminderNotifications() },
+                onCheckReminderNowClick = {
                     scope.launch {
+                        val result = ReminderNotificationCoordinator.evaluateAndNotify(context)
+                        areNotificationsAllowed =
+                            ReminderNotificationCoordinator.areNotificationsEnabled(context)
+                        reminderStatusMessage = reminderNotificationStatusMessage(result)
                         scheduleNextReminderCheck()
                     }
-                }
-            },
-            onCheckReminderNowClick = {
-                scope.launch {
-                    val result = ReminderNotificationCoordinator.evaluateAndNotify(context)
-                    areNotificationsAllowed =
-                        ReminderNotificationCoordinator.areNotificationsEnabled(context)
-                    reminderStatusMessage = reminderNotificationStatusMessage(result)
-                    scheduleNextReminderCheck()
-                }
-            },
-            onReviewNowClick = {
-                scope.launch {
-                    settingsStore.recordReview(System.currentTimeMillis())
-                    ReminderNotificationCoordinator.cancel(context)
-                    reminderStatusMessage = "Review recorded."
-                    scheduleNextReminderCheck()
-                }
-            },
-            onSnoozeReminderClick = {
-                scope.launch {
-                    settingsStore.snoozeUntil(
-                        snoozeUntilMillis(
-                            nowMillis = System.currentTimeMillis(),
-                            snoozeMinutes = settings.snoozeMinutes,
-                        ),
-                    )
-                    ReminderNotificationCoordinator.cancel(context)
-                    reminderStatusMessage = "Reminders snoozed for ${settings.snoozeMinutes} minutes."
-                    scheduleNextReminderCheck()
-                }
-            },
-            onReminderIntervalChange = { value ->
-                scope.launch { settingsStore.setReminderIntervalMinutes(value) }
-            },
-            onSnoozeMinutesChange = { value ->
-                scope.launch { settingsStore.setSnoozeMinutes(value) }
-            },
-            onQuietHoursEnabledChange = { value ->
-                scope.launch { settingsStore.setQuietHoursEnabled(value) }
-            },
-            onQuietHoursStartChange = { value ->
-                scope.launch { settingsStore.setQuietHoursStartMinuteOfDay(value) }
-            },
-            onQuietHoursEndChange = { value ->
-                scope.launch { settingsStore.setQuietHoursEndMinuteOfDay(value) }
-            },
-            onThemeModeChange = { value ->
-                scope.launch { settingsStore.setThemeMode(value) }
-            },
-            usageAccessSnapshot = usageAccessSnapshot,
-            usageAccessStatusMessage = usageAccessStatusMessage,
-            onCheckUsageAccessClick = {
-                usageAccessSnapshot = UsageAccessDiagnostics.accessSnapshot(context)
-                usageAccessStatusMessage = if (usageAccessSnapshot.hasUsageAccess) {
-                    "Usage Access is enabled."
-                } else {
-                    "Usage Access is off."
-                }
-            },
-            onOpenUsageAccessSettingsClick = {
-                val didOpenSettings = UsageAccessDiagnostics.openUsageAccessSettings(context)
-                usageAccessStatusMessage = if (didOpenSettings) {
-                    "Opened Android Usage Access settings."
-                } else {
-                    "Android Usage Access settings could not be opened."
-                }
-            },
-            onScanScreenActivityClick = {
-                scope.launch {
-                    usageAccessSnapshot = withContext(Dispatchers.IO) {
-                        UsageAccessDiagnostics.scanRecentActivity(context)
+                },
+                onReviewNowClick = {
+                    scope.launch {
+                        settingsStore.recordReview(System.currentTimeMillis())
+                        ReminderNotificationCoordinator.cancel(context)
+                        reminderStatusMessage = "Review recorded."
+                        scheduleNextReminderCheck()
                     }
-                    usageAccessStatusMessage = usageAccessScanStatusMessage(usageAccessSnapshot)
+                },
+                onSnoozeReminderClick = {
+                    scope.launch {
+                        settingsStore.snoozeUntil(
+                            snoozeUntilMillis(
+                                nowMillis = System.currentTimeMillis(),
+                                snoozeMinutes = settings.snoozeMinutes,
+                            ),
+                        )
+                        ReminderNotificationCoordinator.cancel(context)
+                        reminderStatusMessage =
+                            "Reminders snoozed for ${settings.snoozeMinutes} minutes."
+                        scheduleNextReminderCheck()
+                    }
+                },
+                onReminderIntervalChange = { value ->
+                    scope.launch { settingsStore.setReminderIntervalMinutes(value) }
+                },
+                onSnoozeMinutesChange = { value ->
+                    scope.launch { settingsStore.setSnoozeMinutes(value) }
+                },
+                onQuietHoursEnabledChange = { value ->
+                    scope.launch { settingsStore.setQuietHoursEnabled(value) }
+                },
+                onQuietHoursStartChange = { value ->
+                    scope.launch { settingsStore.setQuietHoursStartMinuteOfDay(value) }
+                },
+                onQuietHoursEndChange = { value ->
+                    scope.launch { settingsStore.setQuietHoursEndMinuteOfDay(value) }
+                },
+                onThemeModeChange = { value ->
+                    scope.launch { settingsStore.setThemeMode(value) }
+                },
+                usageAccessSnapshot = usageAccessSnapshot,
+                usageAccessStatusMessage = usageAccessStatusMessage,
+                onCheckUsageAccessClick = {
+                    usageAccessSnapshot = UsageAccessDiagnostics.accessSnapshot(context)
+                    usageAccessStatusMessage = if (usageAccessSnapshot.hasUsageAccess) {
+                        "Usage Access is enabled."
+                    } else {
+                        "Usage Access is off."
+                    }
+                },
+                onOpenUsageAccessSettingsClick = {
+                    val didOpenSettings = UsageAccessDiagnostics.openUsageAccessSettings(context)
+                    usageAccessStatusMessage = if (didOpenSettings) {
+                        "Opened Android Usage Access settings."
+                    } else {
+                        "Android Usage Access settings could not be opened."
+                    }
+                },
+                onScanScreenActivityClick = {
+                    scope.launch {
+                        usageAccessSnapshot = withContext(Dispatchers.IO) {
+                            UsageAccessDiagnostics.scanRecentActivity(context)
+                        }
+                        usageAccessStatusMessage = usageAccessScanStatusMessage(usageAccessSnapshot)
+                    }
+                },
+                onDismissUsageAccessStatus = {
+                    usageAccessStatusMessage = null
+                },
+                modifier = modifier,
+            )
+        }
+    }
+}
+
+@Composable
+private fun OnboardingScreen(
+    settings: TaskReminderSettings,
+    authSession: AuthSession,
+    authStatusMessage: String?,
+    isAuthActionInProgress: Boolean,
+    areNotificationsAllowed: Boolean,
+    onGoogleSignInClick: () -> Unit,
+    onDismissAuthStatus: () -> Unit,
+    onEnableNotificationsClick: () -> Unit,
+    onFinishClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var stepIndex by rememberSaveable { mutableStateOf(0) }
+    val step = OnboardingSteps[stepIndex]
+    val stepCopy = onboardingStepCopy(step)
+    val isLastStep = stepIndex == OnboardingSteps.lastIndex
+
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background,
+    ) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            item {
+                Column {
+                    Text(
+                        text = appName(),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Step ${stepIndex + 1} of ${OnboardingSteps.size}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            item {
+                ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        Icon(
+                            imageVector = stepCopy.icon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(40.dp),
+                        )
+                        Text(
+                            text = stepCopy.title,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = stepCopy.body,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+
+                        OnboardingStepDetail(
+                            step = step,
+                            settings = settings,
+                            authSession = authSession,
+                            authStatusMessage = authStatusMessage,
+                            isAuthActionInProgress = isAuthActionInProgress,
+                            areNotificationsAllowed = areNotificationsAllowed,
+                            onGoogleSignInClick = onGoogleSignInClick,
+                            onDismissAuthStatus = onDismissAuthStatus,
+                            onEnableNotificationsClick = onEnableNotificationsClick,
+                        )
+                    }
+                }
+            }
+
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = {
+                            if (isLastStep) {
+                                onFinishClick()
+                            } else {
+                                stepIndex += 1
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(if (isLastStep) "Start using app" else "Continue")
+                    }
+                    OutlinedButton(
+                        onClick = onFinishClick,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text("Set up later")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OnboardingStepDetail(
+    step: OnboardingStep,
+    settings: TaskReminderSettings,
+    authSession: AuthSession,
+    authStatusMessage: String?,
+    isAuthActionInProgress: Boolean,
+    areNotificationsAllowed: Boolean,
+    onGoogleSignInClick: () -> Unit,
+    onDismissAuthStatus: () -> Unit,
+    onEnableNotificationsClick: () -> Unit,
+) {
+    when (step) {
+        OnboardingStep.WELCOME -> Text(
+            text = "No ads, no overlays, and no advanced screen-activity permission in first-run setup.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        OnboardingStep.GOOGLE_TASKS -> GoogleTasksOnboardingDetail(
+            authSession = authSession,
+            authStatusMessage = authStatusMessage,
+            isAuthActionInProgress = isAuthActionInProgress,
+            onGoogleSignInClick = onGoogleSignInClick,
+            onDismissAuthStatus = onDismissAuthStatus,
+        )
+
+        OnboardingStep.NOTIFICATIONS -> NotificationsOnboardingDetail(
+            areNotificationsAllowed = areNotificationsAllowed,
+            onEnableNotificationsClick = onEnableNotificationsClick,
+        )
+
+        OnboardingStep.DEFAULT_REMINDERS -> ReminderDefaultsOnboardingDetail(settings = settings)
+    }
+}
+
+@Composable
+private fun GoogleTasksOnboardingDetail(
+    authSession: AuthSession,
+    authStatusMessage: String?,
+    isAuthActionInProgress: Boolean,
+    onGoogleSignInClick: () -> Unit,
+    onDismissAuthStatus: () -> Unit,
+) {
+    Text(
+        text = if (authSession.isSignedIn) {
+            "Signed in as ${authSession.displayLabel}."
+        } else {
+            "You can sign in now or finish onboarding and connect later from Settings."
+        },
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    if (!authStatusMessage.isNullOrBlank()) {
+        ListItem(
+            headlineContent = { Text(authStatusMessage) },
+            trailingContent = {
+                OutlinedButton(onClick = onDismissAuthStatus) {
+                    Text("Dismiss")
                 }
             },
-            onDismissUsageAccessStatus = {
-                usageAccessStatusMessage = null
-            },
-            modifier = modifier,
         )
     }
+    if (!authSession.isSignedIn) {
+        Button(
+            onClick = onGoogleSignInClick,
+            enabled = !isAuthActionInProgress,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Sign in with Google")
+        }
+    }
+    if (isAuthActionInProgress) {
+        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+    }
+}
+
+@Composable
+private fun NotificationsOnboardingDetail(
+    areNotificationsAllowed: Boolean,
+    onEnableNotificationsClick: () -> Unit,
+) {
+    Text(
+        text = if (areNotificationsAllowed) {
+            "Notifications are enabled."
+        } else {
+            "Notifications are not enabled yet."
+        },
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    if (!areNotificationsAllowed) {
+        Button(
+            onClick = onEnableNotificationsClick,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Enable notifications")
+        }
+    }
+}
+
+@Composable
+private fun ReminderDefaultsOnboardingDetail(settings: TaskReminderSettings) {
+    ListItem(
+        headlineContent = { Text("Reminder interval") },
+        supportingContent = { Text("${settings.reminderIntervalMinutes} minutes") },
+    )
+    ListItem(
+        headlineContent = { Text("Snooze duration") },
+        supportingContent = { Text("${settings.snoozeMinutes} minutes") },
+    )
+    ListItem(
+        headlineContent = { Text("Quiet hours") },
+        supportingContent = {
+            Text(
+                if (settings.quietHoursEnabled) {
+                    "${formatMinuteOfDay(settings.quietHoursStartMinuteOfDay)} to " +
+                        formatMinuteOfDay(settings.quietHoursEndMinuteOfDay)
+                } else {
+                    "Off"
+                },
+            )
+        },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
