@@ -42,6 +42,9 @@
 - Today > Check now reports quiet-hours suppression when quiet hours are active.
 - Today > Enable requests or confirms notification permission.
 - Today > Check now posts a reminder notification when cached pending tasks are eligible.
+- App schedules automatic reminder checks after startup, reminder setting changes, review, and snooze.
+- Automatic reminder checks reuse the same quiet-hours, snooze, review, and pending-task rules as Today > Check now.
+- Automatic reminder timing is best-effort; Android may delay checks while the app is idle, battery saver is active, or the app was force-stopped.
 - Notification contains Review, Snooze, and Done for now actions.
 - Snooze suppresses reminders until snooze expires.
 - Review action opens the app.
@@ -52,6 +55,7 @@
 Prioritize unit tests for:
 
 - Reminder decision engine.
+- Automatic reminder delay calculation.
 - Quiet hours boundary handling.
 - Snooze expiry.
 - Task filtering.

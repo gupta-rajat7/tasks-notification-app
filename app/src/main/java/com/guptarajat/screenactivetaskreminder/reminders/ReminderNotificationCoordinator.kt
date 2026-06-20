@@ -17,8 +17,6 @@ import com.guptarajat.screenactivetaskreminder.R
 import com.guptarajat.screenactivetaskreminder.data.local.TASK_STATUS_COMPLETED
 import com.guptarajat.screenactivetaskreminder.data.local.TaskReminderDatabase
 import com.guptarajat.screenactivetaskreminder.settings.SettingsStore
-import java.time.Instant
-import java.time.ZoneId
 import kotlinx.coroutines.flow.first
 
 private const val MILLIS_PER_MINUTE = 60_000L
@@ -198,13 +196,6 @@ fun reminderNotificationStatusMessage(result: ReminderNotificationCheckResult): 
 
 fun snoozeUntilMillis(nowMillis: Long, snoozeMinutes: Int): Long =
     nowMillis + snoozeMinutes.coerceAtLeast(1) * MILLIS_PER_MINUTE
-
-private fun localMinuteOfDay(nowMillis: Long): Int {
-    val localTime = Instant.ofEpochMilli(nowMillis)
-        .atZone(ZoneId.systemDefault())
-        .toLocalTime()
-    return localTime.hour * 60 + localTime.minute
-}
 
 private fun reviewPendingIntent(context: Context): PendingIntent {
     val intent = Intent(context, MainActivity::class.java).apply {

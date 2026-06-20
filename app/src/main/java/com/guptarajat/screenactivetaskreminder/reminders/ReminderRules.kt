@@ -1,5 +1,8 @@
 package com.guptarajat.screenactivetaskreminder.reminders
 
+import java.time.Instant
+import java.time.ZoneId
+
 private const val MILLIS_PER_MINUTE = 60_000L
 private const val MINUTES_PER_DAY = 24 * 60
 
@@ -109,6 +112,31 @@ fun QuietHours.contains(localMinuteOfDay: Int): Boolean {
     } else {
         localMinuteOfDay >= startMinuteOfDay || localMinuteOfDay < endMinuteOfDay
     }
+}
+
+fun QuietHours.minutesUntilEnd(localMinuteOfDay: Int): Int? {
+    require(localMinuteOfDay in 0 until MINUTES_PER_DAY) {
+        "localMinuteOfDay must be between 0 and 1439."
+    }
+    if (!contains(localMinuteOfDay)) {
+        return null
+    }
+    if (startMinuteOfDay == endMinuteOfDay) {
+        return MINUTES_PER_DAY
+    }
+    val sameDayDelay = endMinuteOfDay - localMinuteOfDay
+    return if (sameDayDelay > 0) {
+        sameDayDelay
+    } else {
+        sameDayDelay + MINUTES_PER_DAY
+    }
+}
+
+fun localMinuteOfDay(nowMillis: Long): Int {
+    val localTime = Instant.ofEpochMilli(nowMillis)
+        .atZone(ZoneId.systemDefault())
+        .toLocalTime()
+    return localTime.hour * 60 + localTime.minute
 }
 
 private fun ReminderRuleInput.nextReviewEligibleAtMillis(): Long? {

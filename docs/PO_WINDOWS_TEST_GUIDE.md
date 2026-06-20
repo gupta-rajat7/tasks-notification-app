@@ -89,6 +89,8 @@ $env:GRADLE_USER_HOME='C:\tmp\task-reminder-dev\gradle-home'
 - Today > Enable turns on notification permission when Android asks.
 - Today > Check now shows a reminder notification when pending tasks are cached and eligible.
 - Today > Check now does not show a notification during active quiet hours.
+- Automatic reminder checks are scheduled after app startup, Settings reminder changes, Review now, Snooze, and Google Tasks sync.
+- For quick testing, use Today > Check now. Waiting for the automatic reminder may take longer than the configured interval because Android schedules background work to protect battery.
 - Reminder notification has Review, Snooze, and Done for now actions.
 - Snooze removes the visible notification.
 - Done for now removes the visible notification.
