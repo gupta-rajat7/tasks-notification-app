@@ -2,7 +2,7 @@
 
 ## Product Objective
 
-Build a lightweight Android app that helps users review pending Google Tasks after a configurable period of phone activity or elapsed review time.
+Build a lightweight Android app that helps users review pending Google Tasks after a configurable review interval. Optional real phone-activity detection may be added later after the Usage Access permission flow is validated.
 
 ## V1 Scope
 
@@ -59,6 +59,8 @@ The app should remind only when:
 
 V1 should use Android notifications as the reminder mechanism.
 
+V1 reminder timing is based on elapsed review state, pending cached tasks, snooze, quiet hours, and Android background scheduling. It does not yet measure cross-app screen activity.
+
 Notification actions:
 
 - Review.
@@ -108,10 +110,10 @@ Paid features should be hidden behind a future Pro unlock only after the free ex
 
 - AccessibilityService.
 - Usage Access.
+- Real cross-app screen-activity detection.
 - Overlay permission.
 - Paid Pro implementation.
 - Ads.
 - Widgets.
 - Wear OS.
 - Multi-account support.
-

@@ -6,7 +6,7 @@ Screen Active Task Reminder
 
 ## One-Line Description
 
-A lightweight Android app that nudges users to review pending tasks when they spend too long active on their phone.
+A lightweight Android app that nudges users to review pending tasks after a configurable review interval. A later optional mode may use Android Usage Access to account for real phone activity.
 
 ## Target User
 
@@ -38,6 +38,7 @@ Help users notice pending work at the right time with minimal setup, minimal bat
 - AI task planning.
 - Ads in the core reminder flow.
 - Mandatory AccessibilityService monitoring.
+- Mandatory Usage Access monitoring.
 - Forced full-screen overlays outside the app.
 
 ## Monetization Direction
@@ -71,4 +72,3 @@ Potential Pro features:
 - User returns after 7 days.
 - No common complaint about battery drain.
 - No common complaint about confusing setup.
-
