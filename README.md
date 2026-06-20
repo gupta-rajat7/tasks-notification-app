@@ -29,6 +29,7 @@ V1 must not make Usage Access, AccessibilityService, or forced overlays part of 
 - [Backlog](docs/BACKLOG.md)
 - [Development Workflow](docs/DEVELOPMENT_WORKFLOW.md)
 - [Local Android Build Setup](docs/LOCAL_ANDROID_SETUP.md)
+- [Windows Readiness Check](docs/WINDOWS_READINESS_CHECK.md)
 - [Windows Run App Guide](docs/WINDOWS_RUN_APP_GUIDE.md)
 - [PO Windows Test Guide](docs/PO_WINDOWS_TEST_GUIDE.md)
 - [Google Play Store Release Guide](docs/PLAY_STORE_RELEASE_GUIDE.md)

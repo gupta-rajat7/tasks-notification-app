@@ -4,6 +4,8 @@ This guide is for a nontechnical product owner who wants to run the Android app 
 
 Use this when you want to see the app on the Windows Android emulator.
 
+If you want to check the machine setup before building, run `docs\WINDOWS_READINESS_CHECK.md` first.
+
 ## What You Will Use
 
 - Project folder: `C:\Users\Tanu Gupta\Documents\Tasks Notification App`

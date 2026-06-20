@@ -2,7 +2,7 @@
 
 This guide is for a nontechnical product owner testing the Android app from the Windows machine.
 
-If you only want to run and open the app, start with `docs/WINDOWS_RUN_APP_GUIDE.md`.
+If you only want to run and open the app, start with `docs/WINDOWS_RUN_APP_GUIDE.md`. If you want to check whether the Windows machine is ready first, use `docs/WINDOWS_READINESS_CHECK.md`.
 
 ## What You Need
 
@@ -110,8 +110,8 @@ $env:GRADLE_USER_HOME='C:\tmp\task-reminder-dev\gradle-home'
 - Today > Check now does not show a notification during active quiet hours.
 - Automatic reminder checks are scheduled after app startup, Settings reminder changes, Review now, Snooze, and Google Tasks sync.
 - For quick testing, use Today > Check now. Waiting for the automatic reminder may take longer than the configured interval because Android schedules background work to protect battery.
-- The current V1 app does not yet measure real cross-app screen activity. That remains a future optional Usage Access feature.
-- Settings > Screen activity diagnostics can check Usage Access, open Android Usage Access settings, and scan recent activity event counts for the `SCR-001` feasibility spike.
+- Optional screen-activity reminders are off by default and the app remains usable without Usage Access.
+- Settings > Screen activity reminders can explain Usage Access, open Android Usage Access settings, and scan recent activity event counts.
 - Settings > Notification recovery shows whether reminders can post notifications.
 - Settings > Notification recovery > Open Android settings opens Android app notification settings.
 - Settings > Notification recovery > Check status updates the status after returning from Android settings.

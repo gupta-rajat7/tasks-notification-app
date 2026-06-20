@@ -26,6 +26,7 @@ The Android app has a working local V1 foundation:
 - Notification permission recovery.
 - Optional screen activity reminders from Settings.
 - Owner run/test guides and Play Store preparation docs.
+- Windows readiness checker for local setup diagnostics.
 
 ## Current Blockers
 
@@ -57,6 +58,7 @@ The latest local commits include:
 - `2d3ee3c Polish empty and error states`
 - `87543dc Add optional screen activity reminder mode`
 - `75f57ee Update project status tracking`
+- `9cc8668 Align screen activity documentation`
 
 Run this in PowerShell to refresh GitHub auth:
 
@@ -70,6 +72,8 @@ After auth is fixed, Codex should push the branch, open a PR, merge to `main`, a
 ## Next Product Owner Tests
 
 Use `docs/WINDOWS_RUN_APP_GUIDE.md` to run the app on the emulator.
+
+Use `docs/WINDOWS_READINESS_CHECK.md` first when you want one command to check Java, Android SDK, emulator, Google sign-in setup, and GitHub auth.
 
 Then use `docs/PO_WINDOWS_TEST_GUIDE.md` and focus on:
 

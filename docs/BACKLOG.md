@@ -282,3 +282,16 @@ Acceptance criteria:
 - Store listing draft exists for internal testing.
 - Performance test guidance separates emulator slowness from app slowness.
 - Play Store guide links to the supporting release documents.
+
+### REL-002: Windows Readiness Checker
+
+Give the product owner one command to check the local Windows development and testing setup.
+
+Status: Complete in `docs/handoffs/2026-06-20-REL-002-windows-readiness-checker.md`.
+
+Acceptance criteria:
+
+- Checker verifies JDK, Android SDK, SDK Platform 36, ADB, emulator tools, AVD presence, connected device status, Google Web Client ID, and GitHub CLI auth.
+- Checker can optionally run the debug APK build and JVM unit tests.
+- Product-owner guide explains how to run the checker and interpret PASS, WARN, and FAIL.
+- Windows run and PO test guides link to the checker.
