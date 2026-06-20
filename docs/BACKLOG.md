@@ -8,6 +8,8 @@ Backlog IDs are stable handles for Codex sessions. A session should claim one sm
 
 Prepare the app and project documents for Android 16 local development and first-owner testing.
 
+Status: Complete in `docs/handoffs/2026-06-19-INFRA-001-android-16-readiness.md`.
+
 Acceptance criteria:
 
 - App build config targets Android SDK 36.
@@ -21,6 +23,8 @@ Acceptance criteria:
 
 Create a native Android project using Kotlin, Compose, and Material 3.
 
+Status: Complete in `docs/handoffs/2026-06-19-APP-001-android-scaffold.md`.
+
 Acceptance criteria:
 
 - Gradle project exists.
@@ -31,6 +35,8 @@ Acceptance criteria:
 ### APP-002: Compose App Shell
 
 Create bottom navigation for Today, Tasks, and Settings.
+
+Status: Complete in `docs/handoffs/2026-06-19-APP-002-compose-shell.md`.
 
 Acceptance criteria:
 
@@ -43,6 +49,8 @@ Acceptance criteria:
 
 Add DataStore-backed settings.
 
+Status: Complete in `docs/handoffs/2026-06-19-APP-003-settings-store.md`.
+
 Acceptance criteria:
 
 - Reminder interval persists.
@@ -53,6 +61,8 @@ Acceptance criteria:
 ### APP-004: Final App Identity
 
 Replace scaffold placeholder identity with the stable Android app identity needed before Google OAuth and Play Store setup.
+
+Status: Complete in `docs/handoffs/2026-06-19-APP-004-final-app-identity.md`.
 
 Acceptance criteria:
 
@@ -67,6 +77,8 @@ Acceptance criteria:
 
 Add Google sign-in through Credential Manager.
 
+Status: Complete in `docs/handoffs/2026-06-19-SYNC-001-google-sign-in.md`.
+
 Acceptance criteria:
 
 - User can start sign-in.
@@ -78,6 +90,8 @@ Acceptance criteria:
 
 Fetch task lists and pending tasks.
 
+Status: Complete in `docs/handoffs/2026-06-19-SYNC-002-google-tasks-client.md`.
+
 Acceptance criteria:
 
 - App can fetch task lists.
@@ -87,6 +101,8 @@ Acceptance criteria:
 ### SYNC-003: Room Cache
 
 Persist task lists, tasks, and sync state.
+
+Status: Complete in `docs/handoffs/2026-06-19-SYNC-003-room-cache.md`.
 
 Acceptance criteria:
 
@@ -100,6 +116,8 @@ Acceptance criteria:
 
 Implement pure Kotlin reminder decision logic.
 
+Status: Complete in `docs/handoffs/2026-06-19-REM-001-reminder-rules.md`.
+
 Acceptance criteria:
 
 - Unit tests cover pending tasks, quiet hours, snooze, and recent review.
@@ -108,6 +126,8 @@ Acceptance criteria:
 ### REM-002: Notification Reminder
 
 Post reminder notification with actions.
+
+Status: Complete in `docs/handoffs/2026-06-20-REM-002-notification-reminder.md`.
 
 Acceptance criteria:
 
@@ -119,6 +139,8 @@ Acceptance criteria:
 
 Add quiet hours settings and suppression.
 
+Status: Complete in `docs/handoffs/2026-06-20-REM-003-quiet-hours-settings.md`.
+
 Acceptance criteria:
 
 - User can turn quiet hours on and off.
@@ -128,6 +150,8 @@ Acceptance criteria:
 ### REM-004: Automatic Reminder Scheduling
 
 Schedule reminder checks without requiring the user to press Check now.
+
+Status: Complete in `docs/handoffs/2026-06-20-REM-004-automatic-reminder-scheduling.md`.
 
 Acceptance criteria:
 
@@ -141,6 +165,8 @@ Acceptance criteria:
 ### SCR-001: Usage Access Feasibility Spike
 
 Validate whether optional Android Usage Access can support the product promise of reminders after real phone activity.
+
+Status: Complete in `docs/handoffs/2026-06-20-SCR-001-usage-access-feasibility-spike.md`.
 
 Acceptance criteria:
 
