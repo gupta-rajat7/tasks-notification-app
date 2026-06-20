@@ -41,6 +41,7 @@ com.guptarajat.screenactivetaskreminder
     remote
     repository
   reminders
+  screenactivity
   settings
   sync
   ui
@@ -139,6 +140,8 @@ Automatic reminder scheduling uses unique one-time WorkManager work rather than 
 
 V1 reminder timing is based on elapsed review state, pending cached tasks, snooze, quiet hours, and Android background scheduling. It does not measure real cross-app screen activity.
 
+The `screenactivity` package owns the Usage Access feasibility spike. It can check Usage Access, open Android Usage Access settings, and count recent target `UsageStatsManager` events from a Settings diagnostics card. It does not feed reminders yet.
+
 ### Sync Flow
 
 1. User starts sync from the Tasks screen.
@@ -184,4 +187,6 @@ These permissions increase setup friction and store-policy risk.
 V2 may evaluate optional Usage Access for stronger screen-use detection. If approved, the implementation should live behind an explicit Settings or onboarding-later screen and use `UsageStatsManager` locally on-device. It should reuse `ReminderRules`, `ReminderNotificationCoordinator`, and `ReminderScheduler` rather than creating a parallel reminder engine.
 
 AccessibilityService should be a last resort. If added, it needs prominent disclosure, explicit consent, a narrow purpose, and Play Console declaration handling. See `docs/adr/0005-optional-usage-access-for-screen-activity.md`.
+
+See `docs/SCREEN_ACTIVITY_FEASIBILITY.md` for the Usage Access spike test plan and decision gate.
 

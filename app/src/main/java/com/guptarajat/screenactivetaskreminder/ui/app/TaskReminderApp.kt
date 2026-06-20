@@ -91,6 +91,8 @@ import com.guptarajat.screenactivetaskreminder.reminders.ReminderNotificationCoo
 import com.guptarajat.screenactivetaskreminder.reminders.ReminderScheduler
 import com.guptarajat.screenactivetaskreminder.reminders.reminderNotificationStatusMessage
 import com.guptarajat.screenactivetaskreminder.reminders.snoozeUntilMillis
+import com.guptarajat.screenactivetaskreminder.screenactivity.UsageAccessDiagnosticSnapshot
+import com.guptarajat.screenactivetaskreminder.screenactivity.UsageAccessDiagnostics
 import com.guptarajat.screenactivetaskreminder.settings.MAX_REMINDER_INTERVAL_MINUTES
 import com.guptarajat.screenactivetaskreminder.settings.MAX_SNOOZE_MINUTES
 import com.guptarajat.screenactivetaskreminder.settings.MIN_REMINDER_INTERVAL_MINUTES
@@ -104,7 +106,9 @@ import com.guptarajat.screenactivetaskreminder.sync.GoogleTasksAuthorizationClie
 import com.guptarajat.screenactivetaskreminder.sync.GoogleTasksAuthorizationResult
 import com.guptarajat.screenactivetaskreminder.sync.userMessage as googleTasksAuthorizationUserMessage
 import com.guptarajat.screenactivetaskreminder.ui.theme.TaskReminderTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private data class AppDestination(
     val section: AppSectionCopy,
@@ -150,6 +154,10 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
     var isTaskSyncInProgress by rememberSaveable { mutableStateOf(false) }
     var pendingSyncAccountId by rememberSaveable { mutableStateOf<String?>(null) }
     var reminderStatusMessage by rememberSaveable { mutableStateOf<String?>(null) }
+    var usageAccessStatusMessage by rememberSaveable { mutableStateOf<String?>(null) }
+    var usageAccessSnapshot by remember {
+        mutableStateOf(UsageAccessDiagnostics.accessSnapshot(context))
+    }
     var areNotificationsAllowed by rememberSaveable {
         mutableStateOf(ReminderNotificationCoordinator.areNotificationsEnabled(context))
     }
@@ -163,6 +171,7 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
     LaunchedEffect(context) {
         ReminderNotificationCoordinator.ensureNotificationChannel(context)
         areNotificationsAllowed = ReminderNotificationCoordinator.areNotificationsEnabled(context)
+        usageAccessSnapshot = UsageAccessDiagnostics.accessSnapshot(context)
     }
 
     LaunchedEffect(context, settings) {
@@ -416,6 +425,35 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
             onThemeModeChange = { value ->
                 scope.launch { settingsStore.setThemeMode(value) }
             },
+            usageAccessSnapshot = usageAccessSnapshot,
+            usageAccessStatusMessage = usageAccessStatusMessage,
+            onCheckUsageAccessClick = {
+                usageAccessSnapshot = UsageAccessDiagnostics.accessSnapshot(context)
+                usageAccessStatusMessage = if (usageAccessSnapshot.hasUsageAccess) {
+                    "Usage Access is enabled."
+                } else {
+                    "Usage Access is off."
+                }
+            },
+            onOpenUsageAccessSettingsClick = {
+                val didOpenSettings = UsageAccessDiagnostics.openUsageAccessSettings(context)
+                usageAccessStatusMessage = if (didOpenSettings) {
+                    "Opened Android Usage Access settings."
+                } else {
+                    "Android Usage Access settings could not be opened."
+                }
+            },
+            onScanScreenActivityClick = {
+                scope.launch {
+                    usageAccessSnapshot = withContext(Dispatchers.IO) {
+                        UsageAccessDiagnostics.scanRecentActivity(context)
+                    }
+                    usageAccessStatusMessage = usageAccessScanStatusMessage(usageAccessSnapshot)
+                }
+            },
+            onDismissUsageAccessStatus = {
+                usageAccessStatusMessage = null
+            },
             modifier = modifier,
         )
     }
@@ -449,6 +487,12 @@ fun TaskReminderApp(
     onQuietHoursStartChange: (Int) -> Unit,
     onQuietHoursEndChange: (Int) -> Unit,
     onThemeModeChange: (ThemeMode) -> Unit,
+    usageAccessSnapshot: UsageAccessDiagnosticSnapshot,
+    usageAccessStatusMessage: String?,
+    onCheckUsageAccessClick: () -> Unit,
+    onOpenUsageAccessSettingsClick: () -> Unit,
+    onScanScreenActivityClick: () -> Unit,
+    onDismissUsageAccessStatus: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var selectedRoute by rememberSaveable { mutableStateOf(TODAY_ROUTE) }
@@ -531,6 +575,12 @@ fun TaskReminderApp(
                     onQuietHoursStartChange = onQuietHoursStartChange,
                     onQuietHoursEndChange = onQuietHoursEndChange,
                     onThemeModeChange = onThemeModeChange,
+                    usageAccessSnapshot = usageAccessSnapshot,
+                    usageAccessStatusMessage = usageAccessStatusMessage,
+                    onCheckUsageAccessClick = onCheckUsageAccessClick,
+                    onOpenUsageAccessSettingsClick = onOpenUsageAccessSettingsClick,
+                    onScanScreenActivityClick = onScanScreenActivityClick,
+                    onDismissUsageAccessStatus = onDismissUsageAccessStatus,
                 )
 
                 else -> TodayScreen(
@@ -813,6 +863,12 @@ private fun SettingsScreen(
     onQuietHoursStartChange: (Int) -> Unit,
     onQuietHoursEndChange: (Int) -> Unit,
     onThemeModeChange: (ThemeMode) -> Unit,
+    usageAccessSnapshot: UsageAccessDiagnosticSnapshot,
+    usageAccessStatusMessage: String?,
+    onCheckUsageAccessClick: () -> Unit,
+    onOpenUsageAccessSettingsClick: () -> Unit,
+    onScanScreenActivityClick: () -> Unit,
+    onDismissUsageAccessStatus: () -> Unit,
 ) {
     AppScreenScaffold(section = appSectionForRoute(SETTINGS_ROUTE)) {
         GoogleAccountCard(
@@ -860,6 +916,93 @@ private fun SettingsScreen(
                     selectedThemeMode = settings.themeMode,
                     onThemeModeChange = onThemeModeChange,
                 )
+            }
+        }
+
+        ScreenActivityDiagnosticsCard(
+            usageAccessSnapshot = usageAccessSnapshot,
+            usageAccessStatusMessage = usageAccessStatusMessage,
+            onCheckUsageAccessClick = onCheckUsageAccessClick,
+            onOpenUsageAccessSettingsClick = onOpenUsageAccessSettingsClick,
+            onScanScreenActivityClick = onScanScreenActivityClick,
+            onDismissUsageAccessStatus = onDismissUsageAccessStatus,
+        )
+    }
+}
+
+@Composable
+private fun ScreenActivityDiagnosticsCard(
+    usageAccessSnapshot: UsageAccessDiagnosticSnapshot,
+    usageAccessStatusMessage: String?,
+    onCheckUsageAccessClick: () -> Unit,
+    onOpenUsageAccessSettingsClick: () -> Unit,
+    onScanScreenActivityClick: () -> Unit,
+    onDismissUsageAccessStatus: () -> Unit,
+) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = "Screen activity diagnostics",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = if (usageAccessSnapshot.hasUsageAccess) {
+                    "Usage Access is enabled. Diagnostics can scan recent Android usage events."
+                } else {
+                    "Usage Access is off. Reminders still work without this optional diagnostic."
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            if (!usageAccessStatusMessage.isNullOrBlank()) {
+                ListItem(
+                    headlineContent = { Text(usageAccessStatusMessage) },
+                    trailingContent = {
+                        OutlinedButton(onClick = onDismissUsageAccessStatus) {
+                            Text("Dismiss")
+                        }
+                    },
+                )
+            }
+
+            if (usageAccessSnapshot.scannedAtMillis != null || usageAccessSnapshot.issue != null) {
+                Text(
+                    text = "Last scan: ${usageAccessSnapshot.totalEventCount} events in " +
+                        "${usageAccessSnapshot.queryWindowMinutes} minutes.",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                usageAccessSnapshot.targetEventCounts.forEach { eventCount ->
+                    ListItem(
+                        headlineContent = { Text(eventCount.type.label) },
+                        trailingContent = { Text(eventCount.count.toString()) },
+                    )
+                }
+            }
+
+            Button(
+                onClick = onScanScreenActivityClick,
+                enabled = usageAccessSnapshot.hasUsageAccess,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Scan recent activity")
+            }
+            OutlinedButton(
+                onClick = onCheckUsageAccessClick,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Check access")
+            }
+            OutlinedButton(
+                onClick = onOpenUsageAccessSettingsClick,
+                enabled = usageAccessSnapshot.canOpenUsageAccessSettings,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Open Usage Access settings")
             }
         }
     }
@@ -1084,6 +1227,15 @@ private fun AppScreenScaffold(
             Box(modifier = Modifier.height(1.dp))
         }
     }
+}
+
+private fun usageAccessScanStatusMessage(
+    snapshot: UsageAccessDiagnosticSnapshot,
+): String = when {
+    !snapshot.issue.isNullOrBlank() -> snapshot.issue
+    snapshot.scannedAtMillis != null ->
+        "Scanned ${snapshot.totalEventCount} usage events from the last ${snapshot.queryWindowMinutes} minutes."
+    else -> "No usage events scanned."
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {

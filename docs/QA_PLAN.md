@@ -46,6 +46,7 @@
 - Automatic reminder checks reuse the same quiet-hours, snooze, review, and pending-task rules as Today > Check now.
 - Automatic reminder timing is best-effort; Android may delay checks while the app is idle, battery saver is active, or the app was force-stopped.
 - V1 reminders do not measure real cross-app screen activity yet.
+- Settings > Screen activity diagnostics can check Usage Access and scan recent target event counts.
 - Notification contains Review, Snooze, and Done for now actions.
 - Snooze suppresses reminders until snooze expires.
 - Review action opens the app.
@@ -68,6 +69,7 @@ Prioritize UI tests later for:
 - Settings edits.
 - Empty state rendering.
 - Optional Usage Access explanation and decline path if screen-activity mode is approved later.
+- `SCR-001` emulator scan from `docs/SCREEN_ACTIVITY_FEASIBILITY.md`.
 
 ## Device Coverage
 

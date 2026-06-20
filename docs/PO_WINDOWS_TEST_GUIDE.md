@@ -92,6 +92,7 @@ $env:GRADLE_USER_HOME='C:\tmp\task-reminder-dev\gradle-home'
 - Automatic reminder checks are scheduled after app startup, Settings reminder changes, Review now, Snooze, and Google Tasks sync.
 - For quick testing, use Today > Check now. Waiting for the automatic reminder may take longer than the configured interval because Android schedules background work to protect battery.
 - The current V1 app does not yet measure real cross-app screen activity. That remains a future optional Usage Access feature.
+- Settings > Screen activity diagnostics can check Usage Access, open Android Usage Access settings, and scan recent activity event counts for the `SCR-001` feasibility spike.
 - Reminder notification has Review, Snooze, and Done for now actions.
 - Snooze removes the visible notification.
 - Done for now removes the visible notification.

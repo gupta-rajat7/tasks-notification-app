@@ -22,6 +22,7 @@ V1 should avoid Usage Access, AccessibilityService, and forced overlays as defau
 - [Project Brief](docs/PROJECT_BRIEF.md)
 - [Product Requirements](docs/PRD.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [Screen Activity Feasibility](docs/SCREEN_ACTIVITY_FEASIBILITY.md)
 - [Google Sign-In Setup](docs/GOOGLE_SIGN_IN_SETUP.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Backlog](docs/BACKLOG.md)
