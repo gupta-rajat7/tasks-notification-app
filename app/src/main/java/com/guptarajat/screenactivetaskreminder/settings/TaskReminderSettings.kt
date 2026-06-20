@@ -10,6 +10,7 @@ const val MINUTES_PER_DAY = 24 * 60
 const val DEFAULT_QUIET_HOURS_START_MINUTE = 22 * 60
 const val DEFAULT_QUIET_HOURS_END_MINUTE = 7 * 60
 const val QUIET_HOURS_STEP_MINUTES = 60
+const val SCREEN_ACTIVITY_REMINDER_WINDOW_MINUTES = 10
 
 data class TaskReminderSettings(
     val reminderIntervalMinutes: Int = DEFAULT_REMINDER_INTERVAL_MINUTES,
@@ -21,6 +22,7 @@ data class TaskReminderSettings(
     val quietHoursEndMinuteOfDay: Int = DEFAULT_QUIET_HOURS_END_MINUTE,
     val lastReviewedAtMillis: Long? = null,
     val snoozedUntilMillis: Long? = null,
+    val screenActivityModeEnabled: Boolean = false,
 )
 
 enum class ThemeMode(

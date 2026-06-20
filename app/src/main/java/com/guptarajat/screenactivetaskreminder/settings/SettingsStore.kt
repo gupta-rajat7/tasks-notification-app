@@ -50,6 +50,7 @@ class SettingsStore(context: Context) {
                 ),
                 lastReviewedAtMillis = preferences[LastReviewedAtMillisKey],
                 snoozedUntilMillis = preferences[SnoozedUntilMillisKey],
+                screenActivityModeEnabled = preferences[ScreenActivityModeEnabledKey] ?: false,
             )
         }
 
@@ -74,6 +75,12 @@ class SettingsStore(context: Context) {
     suspend fun setThemeMode(value: ThemeMode) {
         dataStore.edit { preferences ->
             preferences[ThemeModeKey] = value.storageValue
+        }
+    }
+
+    suspend fun setScreenActivityModeEnabled(value: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[ScreenActivityModeEnabledKey] = value
         }
     }
 
@@ -118,5 +125,6 @@ class SettingsStore(context: Context) {
         val QuietHoursEndMinuteOfDayKey = intPreferencesKey("quiet_hours_end_minute_of_day")
         val LastReviewedAtMillisKey = longPreferencesKey("last_reviewed_at_millis")
         val SnoozedUntilMillisKey = longPreferencesKey("snoozed_until_millis")
+        val ScreenActivityModeEnabledKey = booleanPreferencesKey("screen_activity_mode_enabled")
     }
 }

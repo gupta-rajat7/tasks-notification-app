@@ -51,7 +51,7 @@ Mitigation:
 
 ## RISK-008: Usage Access Onboarding And Privacy Risk
 
-Status: Open.
+Status: Mitigated by optional Settings-only mode; open until physical-device beta feedback.
 
 Description: Real cross-app screen-activity detection likely requires Usage Access. This adds setup friction and gives the app access to sensitive device usage signals.
 
@@ -62,6 +62,7 @@ Mitigation:
 - Explain the permission before opening Android settings.
 - Store derived reminder state instead of raw per-app usage history.
 - Keep the app useful when the user declines the permission.
+- Keep Play Store and privacy disclosures aligned with the optional mode.
 
 ## RISK-005: First-App Complexity
 

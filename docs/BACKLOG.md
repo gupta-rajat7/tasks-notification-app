@@ -155,6 +155,8 @@ Acceptance criteria:
 
 Add user-facing optional screen-activity reminders only if `SCR-001` proves the approach is reliable enough.
 
+Status: Complete in `docs/handoffs/2026-06-20-SCR-002-optional-screen-activity-mode.md`.
+
 Acceptance criteria:
 
 - User can enable or skip the optional mode from Settings.

@@ -17,6 +17,7 @@ The app may access:
 - Local reminder settings such as reminder interval, snooze duration, quiet hours, theme, and selected task lists.
 - Local notification state needed to show reminder notifications.
 - Optional screen-activity diagnostic results if the user opens the diagnostics area.
+- Optional derived recent screen-activity state when the user enables screen activity reminders.
 
 ## How Data Is Used
 
@@ -27,12 +28,15 @@ Data is used to:
 - Decide whether a reminder notification should be shown.
 - Keep reminder settings after the app closes.
 - Help the user test whether optional screen-activity signals may work on the device.
+- Suppress or allow reminder notifications based on recent derived screen-activity state if the user enables that optional mode.
 
 ## Data Storage
 
 The V1 app stores task cache, sync status, selected task lists, and app settings locally on the Android device.
 
 The V1 app does not send task data to a custom server.
+
+If optional screen activity reminders are enabled, the app checks Android usage events at reminder-check time and keeps only derived reminder state. It should not store raw per-app usage history.
 
 ## Google Account And Google Tasks
 
@@ -64,8 +68,10 @@ Users can:
 - Skip Google sign-in.
 - Sign out from the app.
 - Turn reminder settings on or off.
+- Keep screen activity reminders off.
 - Change quiet hours and reminder timing.
 - Turn notification permission off in Android settings.
+- Turn Usage Access off in Android settings.
 - Clear app data or uninstall the app to remove local app data from the device.
 
 ## Children And Sensitive Use

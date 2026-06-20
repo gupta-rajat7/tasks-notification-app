@@ -16,6 +16,7 @@ import com.guptarajat.screenactivetaskreminder.MainActivity
 import com.guptarajat.screenactivetaskreminder.R
 import com.guptarajat.screenactivetaskreminder.data.local.TASK_STATUS_COMPLETED
 import com.guptarajat.screenactivetaskreminder.data.local.TaskReminderDatabase
+import com.guptarajat.screenactivetaskreminder.screenactivity.ScreenActivityReminderGate
 import com.guptarajat.screenactivetaskreminder.settings.SettingsStore
 import kotlinx.coroutines.flow.first
 
@@ -74,6 +75,11 @@ object ReminderNotificationCoordinator {
         val pendingTaskCount = TaskReminderDatabase.getInstance(appContext)
             .taskDao()
             .countPendingTasksForSelectedLists(TASK_STATUS_COMPLETED)
+        val screenActivitySnapshot = ScreenActivityReminderGate.snapshot(
+            context = appContext,
+            isEnabled = settings.screenActivityModeEnabled,
+            nowMillis = nowMillis,
+        )
         val decision = ReminderRules.evaluate(
             ReminderRuleInput(
                 pendingTaskCount = pendingTaskCount,
@@ -86,6 +92,11 @@ object ReminderNotificationCoordinator {
                     isEnabled = settings.quietHoursEnabled,
                     startMinuteOfDay = settings.quietHoursStartMinuteOfDay,
                     endMinuteOfDay = settings.quietHoursEndMinuteOfDay,
+                ),
+                screenActivityRequirement = ScreenActivityRequirement(
+                    isEnabled = settings.screenActivityModeEnabled,
+                    hasUsageAccess = screenActivitySnapshot.hasUsageAccess,
+                    hasRecentActivity = screenActivitySnapshot.hasRecentActivity,
                 ),
             ),
         )
@@ -191,6 +202,10 @@ fun reminderNotificationStatusMessage(result: ReminderNotificationCheckResult): 
             "No reminder sent because reminders are snoozed."
         result.decision.suppressionReason == ReminderSuppressionReason.RECENTLY_REVIEWED ->
             "No reminder sent because tasks were reviewed recently."
+        result.decision.suppressionReason == ReminderSuppressionReason.USAGE_ACCESS_REQUIRED ->
+            "No reminder sent because screen activity mode needs Usage Access."
+        result.decision.suppressionReason == ReminderSuppressionReason.NO_RECENT_SCREEN_ACTIVITY ->
+            "No reminder sent because no recent screen activity was detected."
         else -> "No reminder sent."
     }
 

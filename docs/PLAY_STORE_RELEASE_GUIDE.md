@@ -75,6 +75,7 @@ Expected direction for V1:
 - No ads SDK.
 - No analytics SDK unless separately approved.
 - No sale of user data.
+- Optional Usage Access mode checks derived recent activity locally and does not store raw per-app usage history.
 
 Final Data safety answers must be reviewed against the exact app implementation before submission.
 

@@ -168,4 +168,66 @@ class ReminderRulesTest {
         assertFalse(decision.shouldRemind)
         assertEquals(ReminderSuppressionReason.QUIET_HOURS, decision.suppressionReason)
     }
+
+    @Test
+    fun suppressesScreenActivityModeWhenUsageAccessIsMissing() {
+        val decision = ReminderRules.evaluate(
+            ReminderRuleInput(
+                pendingTaskCount = 1,
+                nowMillis = 1_000L,
+                localMinuteOfDay = 9 * 60,
+                reminderIntervalMinutes = 10,
+                screenActivityRequirement = ScreenActivityRequirement(
+                    isEnabled = true,
+                    hasUsageAccess = false,
+                    hasRecentActivity = false,
+                ),
+            ),
+        )
+
+        assertFalse(decision.shouldRemind)
+        assertEquals(ReminderSuppressionReason.USAGE_ACCESS_REQUIRED, decision.suppressionReason)
+    }
+
+    @Test
+    fun suppressesScreenActivityModeWhenRecentActivityIsMissing() {
+        val decision = ReminderRules.evaluate(
+            ReminderRuleInput(
+                pendingTaskCount = 1,
+                nowMillis = 1_000L,
+                localMinuteOfDay = 9 * 60,
+                reminderIntervalMinutes = 10,
+                screenActivityRequirement = ScreenActivityRequirement(
+                    isEnabled = true,
+                    hasUsageAccess = true,
+                    hasRecentActivity = false,
+                ),
+            ),
+        )
+
+        assertFalse(decision.shouldRemind)
+        assertEquals(
+            ReminderSuppressionReason.NO_RECENT_SCREEN_ACTIVITY,
+            decision.suppressionReason,
+        )
+    }
+
+    @Test
+    fun remindsWhenScreenActivityModeHasRecentActivity() {
+        val decision = ReminderRules.evaluate(
+            ReminderRuleInput(
+                pendingTaskCount = 1,
+                nowMillis = 1_000L,
+                localMinuteOfDay = 9 * 60,
+                reminderIntervalMinutes = 10,
+                screenActivityRequirement = ScreenActivityRequirement(
+                    isEnabled = true,
+                    hasUsageAccess = true,
+                    hasRecentActivity = true,
+                ),
+            ),
+        )
+
+        assertTrue(decision.shouldRemind)
+    }
 }

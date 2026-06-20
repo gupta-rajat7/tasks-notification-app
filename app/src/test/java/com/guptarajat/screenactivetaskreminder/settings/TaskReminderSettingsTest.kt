@@ -17,6 +17,7 @@ class TaskReminderSettingsTest {
         assertEquals(7 * 60, settings.quietHoursEndMinuteOfDay)
         assertEquals(null, settings.lastReviewedAtMillis)
         assertEquals(null, settings.snoozedUntilMillis)
+        assertEquals(false, settings.screenActivityModeEnabled)
     }
 
     @Test

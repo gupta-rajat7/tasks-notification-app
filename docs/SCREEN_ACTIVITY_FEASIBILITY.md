@@ -6,6 +6,12 @@ Proceed with `SCR-001` as a diagnostic spike only. Do not promote screen-activit
 
 Reason: Android Usage Access is the right narrow platform path, but it adds setup friction and may vary by device. The app should remain useful without it.
 
+## SCR-002 Implementation Update
+
+`SCR-002` adds optional screen activity reminders from Settings only. The app remains usable without Usage Access. When the mode is enabled, reminder checks use derived recent activity evidence and do not persist raw per-app usage history.
+
+Physical Android phone testing is still required before beta decisions because emulator Usage Access behavior can differ from real devices.
+
 ## What This Spike Adds
 
 - Declares `android.permission.PACKAGE_USAGE_STATS` so Android can show the app in Usage Access settings.

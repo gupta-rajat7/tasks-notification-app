@@ -103,6 +103,7 @@ import com.guptarajat.screenactivetaskreminder.settings.MAX_SNOOZE_MINUTES
 import com.guptarajat.screenactivetaskreminder.settings.MIN_REMINDER_INTERVAL_MINUTES
 import com.guptarajat.screenactivetaskreminder.settings.MIN_SNOOZE_MINUTES
 import com.guptarajat.screenactivetaskreminder.settings.QUIET_HOURS_STEP_MINUTES
+import com.guptarajat.screenactivetaskreminder.settings.SCREEN_ACTIVITY_REMINDER_WINDOW_MINUTES
 import com.guptarajat.screenactivetaskreminder.settings.SettingsStore
 import com.guptarajat.screenactivetaskreminder.settings.TaskReminderSettings
 import com.guptarajat.screenactivetaskreminder.settings.ThemeMode
@@ -576,6 +577,22 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
                 onThemeModeChange = { value ->
                     scope.launch { settingsStore.setThemeMode(value) }
                 },
+                onScreenActivityModeEnabledChange = { value ->
+                    scope.launch {
+                        settingsStore.setScreenActivityModeEnabled(value)
+                        usageAccessSnapshot = UsageAccessDiagnostics.accessSnapshot(context)
+                        usageAccessStatusMessage = if (value) {
+                            if (usageAccessSnapshot.hasUsageAccess) {
+                                "Screen activity reminders are on."
+                            } else {
+                                "Screen activity mode is on. Open Usage Access settings to allow recent activity checks."
+                            }
+                        } else {
+                            "Screen activity mode is off. Standard task reminders still work."
+                        }
+                        scheduleNextReminderCheck()
+                    }
+                },
                 usageAccessSnapshot = usageAccessSnapshot,
                 usageAccessStatusMessage = usageAccessStatusMessage,
                 onCheckUsageAccessClick = {
@@ -589,7 +606,7 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
                 onOpenUsageAccessSettingsClick = {
                     val didOpenSettings = UsageAccessDiagnostics.openUsageAccessSettings(context)
                     usageAccessStatusMessage = if (didOpenSettings) {
-                        "Opened Android Usage Access settings."
+                        "Opened Android Usage Access settings. Turn on this app, then return and check access."
                     } else {
                         "Android Usage Access settings could not be opened."
                     }
@@ -875,6 +892,7 @@ fun TaskReminderApp(
     onQuietHoursStartChange: (Int) -> Unit,
     onQuietHoursEndChange: (Int) -> Unit,
     onThemeModeChange: (ThemeMode) -> Unit,
+    onScreenActivityModeEnabledChange: (Boolean) -> Unit,
     usageAccessSnapshot: UsageAccessDiagnosticSnapshot,
     usageAccessStatusMessage: String?,
     onCheckUsageAccessClick: () -> Unit,
@@ -969,6 +987,7 @@ fun TaskReminderApp(
                     onQuietHoursStartChange = onQuietHoursStartChange,
                     onQuietHoursEndChange = onQuietHoursEndChange,
                     onThemeModeChange = onThemeModeChange,
+                    onScreenActivityModeEnabledChange = onScreenActivityModeEnabledChange,
                     reminderStatusMessage = reminderStatusMessage,
                     areNotificationsAllowed = areNotificationsAllowed,
                     onDismissReminderStatus = onDismissReminderStatus,
@@ -1583,6 +1602,7 @@ private fun SettingsScreen(
     onQuietHoursStartChange: (Int) -> Unit,
     onQuietHoursEndChange: (Int) -> Unit,
     onThemeModeChange: (ThemeMode) -> Unit,
+    onScreenActivityModeEnabledChange: (Boolean) -> Unit,
     reminderStatusMessage: String?,
     areNotificationsAllowed: Boolean,
     onDismissReminderStatus: () -> Unit,
@@ -1655,8 +1675,10 @@ private fun SettingsScreen(
         )
 
         ScreenActivityDiagnosticsCard(
+            settings = settings,
             usageAccessSnapshot = usageAccessSnapshot,
             usageAccessStatusMessage = usageAccessStatusMessage,
+            onScreenActivityModeEnabledChange = onScreenActivityModeEnabledChange,
             onCheckUsageAccessClick = onCheckUsageAccessClick,
             onOpenUsageAccessSettingsClick = onOpenUsageAccessSettingsClick,
             onScanScreenActivityClick = onScanScreenActivityClick,
@@ -1759,8 +1781,10 @@ private fun NotificationRecoveryCard(
 
 @Composable
 private fun ScreenActivityDiagnosticsCard(
+    settings: TaskReminderSettings,
     usageAccessSnapshot: UsageAccessDiagnosticSnapshot,
     usageAccessStatusMessage: String?,
+    onScreenActivityModeEnabledChange: (Boolean) -> Unit,
     onCheckUsageAccessClick: () -> Unit,
     onOpenUsageAccessSettingsClick: () -> Unit,
     onScanScreenActivityClick: () -> Unit,
@@ -1772,19 +1796,48 @@ private fun ScreenActivityDiagnosticsCard(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                text = "Screen activity diagnostics",
+                text = "Screen activity reminders",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                text = if (usageAccessSnapshot.hasUsageAccess) {
-                    "Usage Access is enabled. Diagnostics can scan recent Android usage events."
-                } else {
-                    "Usage Access is off. Reminders still work without this optional diagnostic."
+                text = when {
+                    settings.screenActivityModeEnabled && usageAccessSnapshot.hasUsageAccess ->
+                        "On. Reminder checks require recent Android activity evidence from the last $SCREEN_ACTIVITY_REMINDER_WINDOW_MINUTES minutes."
+                    settings.screenActivityModeEnabled ->
+                        "On, but Android Usage Access is off. Reminders will wait until access is allowed."
+                    else ->
+                        "Off. Standard task reminders still work without Usage Access."
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
+            ListItem(
+                headlineContent = { Text("Require recent screen activity") },
+                supportingContent = {
+                    Text(
+                        "Optional mode. The app checks derived activity state at reminder time and does not save raw per-app usage history.",
+                    )
+                },
+                trailingContent = {
+                    Switch(
+                        checked = settings.screenActivityModeEnabled,
+                        onCheckedChange = onScreenActivityModeEnabledChange,
+                    )
+                },
+            )
+
+            if (settings.screenActivityModeEnabled && !usageAccessSnapshot.hasUsageAccess) {
+                ListItem(
+                    headlineContent = { Text("Permission needed") },
+                    supportingContent = {
+                        Text(
+                            "Android will show Usage Access settings. Turn on this app there, then return and tap Check access.",
+                        )
+                    },
+                )
+            }
 
             if (!usageAccessStatusMessage.isNullOrBlank()) {
                 ListItem(
