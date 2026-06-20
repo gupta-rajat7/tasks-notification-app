@@ -56,6 +56,7 @@ The latest local commits include:
 - `75175c3 Add Windows run app guide`
 - `2d3ee3c Polish empty and error states`
 - `87543dc Add optional screen activity reminder mode`
+- `75f57ee Update project status tracking`
 
 Run this in PowerShell to refresh GitHub auth:
 

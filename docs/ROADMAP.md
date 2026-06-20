@@ -83,7 +83,7 @@ Deliverables:
 - Lightweight UI/UX plan.
 - Error states.
 - Permission recovery UI.
-- Optional Usage Access feasibility decision for real screen-activity detection.
+- Optional Settings-only screen-activity mode with remaining physical-device validation.
 - Basic manual QA pass.
 - Privacy policy draft in `docs/PRIVACY_POLICY_DRAFT.md`.
 - Store listing draft in `docs/STORE_LISTING_DRAFT.md`.

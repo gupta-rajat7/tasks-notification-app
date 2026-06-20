@@ -139,15 +139,15 @@ Quiet-hours settings are stored in DataStore as:
 
 The Settings screen configures quiet-hours start and end in hourly steps. The reminder coordinator maps these values into the pure Kotlin `QuietHours` rule model before posting a notification.
 
-Automatic reminder scheduling uses unique one-time WorkManager work rather than exact alarms. The app does not request exact-alarm permission, battery-exemption permission, Usage Access, AccessibilityService, or overlay permission for V1 reminder scheduling. Timing is best-effort under Android background limits and may be delayed by Doze, app standby, battery saver, or force-stop.
+Automatic reminder scheduling uses unique one-time WorkManager work rather than exact alarms. The app does not request exact-alarm permission, battery-exemption permission, Usage Access, AccessibilityService, or overlay permission for default V1 reminder scheduling. Timing is best-effort under Android background limits and may be delayed by Doze, app standby, battery saver, or force-stop.
 
-V1 reminder timing is based on elapsed review state, pending cached tasks, snooze, quiet hours, and Android background scheduling. It does not measure real cross-app screen activity.
+Standard V1 reminder timing is based on elapsed review state, pending cached tasks, snooze, quiet hours, and Android background scheduling. Optional screen-activity mode adds a derived recent-activity gate only when the user enables it from Settings and grants Android Usage Access. Raw per-app usage history is not persisted.
 
 ### Notification Permission Recovery
 
 The app keeps notification recovery in the UI layer. Today and Settings can request the standard `POST_NOTIFICATIONS` permission, and Settings can open Android app notification settings when Android no longer shows the runtime prompt. Returning from Android settings refreshes `ReminderNotificationCoordinator.areNotificationsEnabled` and schedules the next reminder check. This does not add new reminder rules or advanced permissions.
 
-The `screenactivity` package owns the Usage Access feasibility spike. It can check Usage Access, open Android Usage Access settings, and count recent target `UsageStatsManager` events from a Settings diagnostics card. It does not feed reminders yet.
+The `screenactivity` package owns Usage Access diagnostics and reminder gating. It can check Usage Access, open Android Usage Access settings, count recent target `UsageStatsManager` events from a Settings diagnostics card, and provide a derived `ScreenActivityRequirement` to the reminder coordinator when optional screen-activity mode is enabled.
 
 ### Sync Flow
 
@@ -164,12 +164,12 @@ The Tasks screen exposes synced Google Task lists from Room. Each list has an `i
 
 ## Permissions
 
-V1 should require only:
+Default V1 behavior should require only:
 
 - Internet.
 - Notification permission on supported Android versions.
 
-Avoid V1 use of:
+Avoid mandatory V1 use of:
 
 - AccessibilityService.
 - Usage Access.
@@ -196,9 +196,9 @@ These permissions increase setup friction and store-policy risk.
 
 ## Future Architecture Options
 
-V2 may evaluate optional Usage Access for stronger screen-use detection. If approved, the implementation should live behind an explicit Settings or onboarding-later screen and use `UsageStatsManager` locally on-device. It should reuse `ReminderRules`, `ReminderNotificationCoordinator`, and `ReminderScheduler` rather than creating a parallel reminder engine.
+Future work may refine optional Usage Access for stronger screen-use detection after physical-device testing. The implementation must stay behind an explicit Settings or onboarding-later screen and use `UsageStatsManager` locally on-device. It should keep reusing `ReminderRules`, `ReminderNotificationCoordinator`, and `ReminderScheduler` rather than creating a parallel reminder engine.
 
 AccessibilityService should be a last resort. If added, it needs prominent disclosure, explicit consent, a narrow purpose, and Play Console declaration handling. See `docs/adr/0005-optional-usage-access-for-screen-activity.md`.
 
-See `docs/SCREEN_ACTIVITY_FEASIBILITY.md` for the Usage Access spike test plan and decision gate.
+See `docs/SCREEN_ACTIVITY_FEASIBILITY.md` for the Usage Access test plan, emulator result, and remaining physical-device validation gate.
 

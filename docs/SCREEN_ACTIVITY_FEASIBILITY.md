@@ -2,7 +2,7 @@
 
 ## Current Recommendation
 
-Proceed with `SCR-001` as a diagnostic spike only. Do not promote screen-activity detection into the normal reminder engine until the diagnostic has been tested on the Windows emulator and at least one physical Android phone.
+Proceed with optional screen-activity reminders as a Settings-only advanced mode. Keep the standard reminder engine useful without Usage Access, and require physical Android phone validation before beta.
 
 Reason: Android Usage Access is the right narrow platform path, but it adds setup friction and may vary by device. The app should remain useful without it.
 
@@ -12,20 +12,20 @@ Reason: Android Usage Access is the right narrow platform path, but it adds setu
 
 Physical Android phone testing is still required before beta decisions because emulator Usage Access behavior can differ from real devices.
 
-## What This Spike Adds
+## What The Screen-Activity Work Adds
 
 - Declares `android.permission.PACKAGE_USAGE_STATS` so Android can show the app in Usage Access settings.
-- Adds a Settings-only diagnostics card.
+- Adds a Settings-only diagnostics card and optional reminder toggle.
 - Checks whether Usage Access is currently granted.
 - Opens Android Usage Access settings with a safe fallback if Android has no matching settings screen.
-- Reads recent `UsageStatsManager` events locally on-device only after the user taps Scan.
+- Reads recent `UsageStatsManager` events locally on-device only after the user taps Scan or enables optional screen-activity reminders.
 - Counts only the event types needed for feasibility:
   - `SCREEN_INTERACTIVE`
   - `SCREEN_NON_INTERACTIVE`
   - `ACTIVITY_RESUMED`
   - `ACTIVITY_PAUSED`
 
-The spike does not store raw per-app usage history, does not add first-run onboarding prompts, and does not feed screen activity into reminders yet.
+The app does not store raw per-app usage history and does not add first-run onboarding prompts. Screen activity feeds reminders only when the user enables the optional Settings toggle.
 
 ## Windows Emulator Test Steps
 
@@ -70,12 +70,12 @@ SCREEN_NON_INTERACTIVE: 0
 ACTIVITY_RESUMED: 4
 ACTIVITY_PAUSED: 4
 Notes: The Settings diagnostics card refreshed from off to enabled after Check access. Scan recent activity returned local UsageStatsManager events and displayed all four target rows. SCREEN_NON_INTERACTIVE stayed at 0 during this short headless emulator run because the screen was not turned off during the test.
-Recommendation: proceed to physical-device validation before building SCR-002
+Recommendation: proceed to physical-device validation before beta
 ```
 
-## Decision Gate For SCR-002
+## Remaining Validation Gate
 
-Build `SCR-002: Optional Screen Activity Mode` only if:
+Keep optional screen-activity reminders out of beta unless:
 
 - Usage Access can be enabled by a nontechnical tester.
 - The target events appear reliably after normal phone use.

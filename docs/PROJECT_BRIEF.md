@@ -6,7 +6,7 @@ Screen Active Task Reminder
 
 ## One-Line Description
 
-A lightweight Android app that nudges users to review pending tasks after a configurable review interval. A later optional mode may use Android Usage Access to account for real phone activity.
+A lightweight Android app that nudges users to review pending tasks after a configurable review interval. Standard reminders work without advanced permissions, and an optional Settings-only mode can use Android Usage Access to account for recent phone activity.
 
 ## Target User
 
