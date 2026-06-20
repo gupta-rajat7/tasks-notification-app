@@ -14,12 +14,13 @@ class TaskCacheRepository(
 ) {
     val cacheSnapshot: Flow<TaskCacheSnapshot> = combine(
         database.taskDao().observePendingTasksForSelectedLists(TASK_STATUS_COMPLETED),
-        database.taskListDao().observeSelectedTaskListCount(),
+        database.taskListDao().observeTaskLists(),
         database.syncStateDao().observeLatestSyncState(),
-    ) { pendingTasks, selectedTaskListCount, syncState ->
+    ) { pendingTasks, taskLists, syncState ->
         TaskCacheSnapshot(
             pendingTasks = pendingTasks,
-            selectedTaskListCount = selectedTaskListCount,
+            taskLists = taskLists.map { it.toCachedTaskList() },
+            selectedTaskListCount = taskLists.count { it.isSelected },
             lastSuccessfulSyncAtMillis = syncState?.lastSuccessfulSyncAtMillis,
             lastError = syncState?.lastError,
         )
@@ -30,9 +31,17 @@ class TaskCacheRepository(
         accountId: String = DEFAULT_ACCOUNT_ID,
     ) {
         database.withTransaction {
+            val existingSelections = database.taskListDao()
+                .getTaskLists()
+                .associate { it.id to it.isSelected }
+            val taskLists = fetchedCache.taskLists.map { taskList ->
+                taskList.toEntity(
+                    isSelectedOverride = existingSelections[taskList.id] ?: taskList.isSelected,
+                )
+            }
             database.taskDao().deleteAllTasks()
             database.taskListDao().deleteAllTaskLists()
-            database.taskListDao().upsertTaskLists(fetchedCache.taskLists.map { it.toEntity() })
+            database.taskListDao().upsertTaskLists(taskLists)
             database.taskDao().upsertTasks(fetchedCache.tasks.map { it.toEntity() })
             database.syncStateDao().upsertSyncState(
                 SyncStateEntity(
@@ -58,5 +67,9 @@ class TaskCacheRepository(
                 lastError = message,
             ),
         )
+    }
+
+    suspend fun setTaskListSelected(taskListId: String, isSelected: Boolean) {
+        database.taskListDao().setTaskListSelected(taskListId, isSelected)
     }
 }

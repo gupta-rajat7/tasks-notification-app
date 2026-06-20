@@ -4,10 +4,18 @@ import com.guptarajat.screenactivetaskreminder.data.local.TASK_STATUS_NEEDS_ACTI
 import com.guptarajat.screenactivetaskreminder.data.local.TaskEntity
 import com.guptarajat.screenactivetaskreminder.data.local.TaskListEntity
 
-fun FetchedTaskList.toEntity(): TaskListEntity =
+fun FetchedTaskList.toEntity(isSelectedOverride: Boolean = isSelected): TaskListEntity =
     TaskListEntity(
         id = id,
         title = title.ifBlank { "Untitled list" },
+        updatedAtMillis = updatedAtMillis,
+        isSelected = isSelectedOverride,
+    )
+
+fun TaskListEntity.toCachedTaskList(): CachedTaskList =
+    CachedTaskList(
+        id = id,
+        title = title,
         updatedAtMillis = updatedAtMillis,
         isSelected = isSelected,
     )

@@ -156,6 +156,11 @@ The `screenactivity` package owns the Usage Access feasibility spike. It can che
 3. Repository maps remote data into Room entities.
 4. UI observes Room and updates automatically.
 5. Sync errors are stored and shown non-blockingly.
+6. Last successful sync time is stored in `SyncStateEntity` and surfaced on Today and Tasks.
+
+### Task-List Filtering
+
+The Tasks screen exposes synced Google Task lists from Room. Each list has an `isSelected` flag. Today, task cards, pending counts, and reminder checks query only selected lists. The repository preserves existing `isSelected` values for matching Google task-list IDs across future syncs, so a user's watched-list choices do not reset after refresh.
 
 ## Permissions
 

@@ -11,8 +11,14 @@ interface TaskListDao {
     @Query("SELECT * FROM task_lists ORDER BY title COLLATE NOCASE")
     fun observeTaskLists(): Flow<List<TaskListEntity>>
 
+    @Query("SELECT * FROM task_lists")
+    suspend fun getTaskLists(): List<TaskListEntity>
+
     @Query("SELECT COUNT(*) FROM task_lists WHERE isSelected = 1")
     fun observeSelectedTaskListCount(): Flow<Int>
+
+    @Query("UPDATE task_lists SET isSelected = :isSelected WHERE id = :taskListId")
+    suspend fun setTaskListSelected(taskListId: String, isSelected: Boolean)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertTaskLists(taskLists: List<TaskListEntity>)
