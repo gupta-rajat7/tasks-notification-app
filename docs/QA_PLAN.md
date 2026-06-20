@@ -17,6 +17,8 @@
 - Notification permission is requested at the right moment.
 - User lands on Today after setup.
 - User can recover from skipping notification permission.
+- User can tap Set up later and still land on Today.
+- Relaunch after onboarding completion skips the welcome flow.
 
 ### Tasks
 

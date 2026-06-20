@@ -58,10 +58,11 @@ Steps:
 
 1. Welcome and product promise.
 2. Google sign-in.
-3. Google Tasks sync.
-4. Notification permission.
-5. Default reminder settings confirmation.
-6. Land on Today.
+3. Notification permission.
+4. Default reminder settings confirmation.
+5. Land on Today.
+
+Current implementation: `UX-001` uses a skippable first-run flow gated by DataStore. Google sign-in and notifications are encouraged but not forced, so beta testers can still enter the app before OAuth is fully configured.
 
 ## Visual Direction
 
@@ -74,7 +75,7 @@ Steps:
 
 ## UX Backlog
 
-- `UX-001`: Build guided first-run onboarding.
+- `UX-001`: Build guided first-run onboarding. Implemented as a skippable first-run flow with Google Tasks setup, notification setup, and default reminder confirmation.
 - `UX-002`: Add polished empty and error states. Implemented for Today and Tasks with sign-in, first-sync, all-caught-up, and recoverable sync-error states.
 - `UX-003`: Add notification permission recovery screen.
 - `UX-004`: Add manual sync and last synced feedback.

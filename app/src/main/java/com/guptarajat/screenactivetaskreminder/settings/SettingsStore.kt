@@ -40,6 +40,7 @@ class SettingsStore(context: Context) {
                     preferences[SnoozeMinutesKey] ?: DEFAULT_SNOOZE_MINUTES,
                 ),
                 themeMode = ThemeMode.fromStorageValue(preferences[ThemeModeKey]),
+                hasCompletedOnboarding = preferences[OnboardingCompletedKey] ?: false,
                 quietHoursEnabled = preferences[QuietHoursEnabledKey] ?: false,
                 quietHoursStartMinuteOfDay = normalizeMinuteOfDay(
                     preferences[QuietHoursStartMinuteOfDayKey] ?: DEFAULT_QUIET_HOURS_START_MINUTE,
@@ -51,6 +52,12 @@ class SettingsStore(context: Context) {
                 snoozedUntilMillis = preferences[SnoozedUntilMillisKey],
             )
         }
+
+    suspend fun setOnboardingCompleted(value: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[OnboardingCompletedKey] = value
+        }
+    }
 
     suspend fun setReminderIntervalMinutes(value: Int) {
         dataStore.edit { preferences ->
@@ -105,6 +112,7 @@ class SettingsStore(context: Context) {
         val ReminderIntervalMinutesKey = intPreferencesKey("reminder_interval_minutes")
         val SnoozeMinutesKey = intPreferencesKey("snooze_minutes")
         val ThemeModeKey = stringPreferencesKey("theme_mode")
+        val OnboardingCompletedKey = booleanPreferencesKey("onboarding_completed")
         val QuietHoursEnabledKey = booleanPreferencesKey("quiet_hours_enabled")
         val QuietHoursStartMinuteOfDayKey = intPreferencesKey("quiet_hours_start_minute_of_day")
         val QuietHoursEndMinuteOfDayKey = intPreferencesKey("quiet_hours_end_minute_of_day")

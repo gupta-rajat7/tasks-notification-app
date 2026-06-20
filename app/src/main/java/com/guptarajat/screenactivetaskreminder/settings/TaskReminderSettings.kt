@@ -15,6 +15,7 @@ data class TaskReminderSettings(
     val reminderIntervalMinutes: Int = DEFAULT_REMINDER_INTERVAL_MINUTES,
     val snoozeMinutes: Int = DEFAULT_SNOOZE_MINUTES,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val hasCompletedOnboarding: Boolean = false,
     val quietHoursEnabled: Boolean = false,
     val quietHoursStartMinuteOfDay: Int = DEFAULT_QUIET_HOURS_START_MINUTE,
     val quietHoursEndMinuteOfDay: Int = DEFAULT_QUIET_HOURS_END_MINUTE,

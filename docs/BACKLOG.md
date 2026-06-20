@@ -170,6 +170,8 @@ Acceptance criteria:
 
 Build guided first-run onboarding.
 
+Status: Complete in `docs/handoffs/2026-06-20-UX-001-guided-onboarding.md`.
+
 Acceptance criteria:
 
 - User can complete setup in under 2 minutes.
