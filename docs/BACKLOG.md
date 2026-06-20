@@ -98,6 +98,20 @@ Acceptance criteria:
 - App can fetch pending tasks.
 - API failures are handled gracefully.
 
+### AUTH-001: Google OAuth Local Setup Helper
+
+Make the final local OAuth configuration step safe and repeatable for the product owner.
+
+Status: Complete in `docs/handoffs/2026-06-20-AUTH-001-google-oauth-local-setup-helper.md`.
+
+Acceptance criteria:
+
+- Product owner can print the debug SHA-1 with one command.
+- Product owner can save the Web Client ID to ignored `local.properties` with one command.
+- Readiness checker validates the Web Client ID format.
+- App config rejects blank, placeholder, and malformed Web Client IDs.
+- Docs point to the setup helper instead of hand-editing as the primary path.
+
 ### SYNC-003: Room Cache
 
 Persist task lists, tasks, and sync state.

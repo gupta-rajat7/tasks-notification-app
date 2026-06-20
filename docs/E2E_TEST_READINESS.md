@@ -79,6 +79,7 @@ These are not app-code blockers, but they block complete external beta:
 
 - Real Google sign-in and Google Tasks sync need Google Cloud OAuth setup.
 - Google OAuth needs a local `google.web.client.id` value in `local.properties`.
+- Use `tools\setup_google_oauth.ps1` to print the debug SHA-1 and save the Web Client ID.
 - GitHub push/PR requires refreshed GitHub credentials in the Codex session.
 - Physical Android phone validation is still needed before beta decisions.
 - Privacy policy draft needs product-owner review and a public URL before Play testing.

@@ -19,7 +19,13 @@ Create OAuth clients in Google Cloud for this app:
 
 The app receives the Web Client ID through Gradle-generated Android resources. Do not commit a real Web Client ID into `strings.xml`.
 
-For local testing, put the Web Client ID into ignored `local.properties`:
+For local testing, use the setup helper:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\setup_google_oauth.ps1 -WebClientId 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com'
+```
+
+The helper writes the Web Client ID into ignored `local.properties`:
 
 ```properties
 google.web.client.id=YOUR_WEB_CLIENT_ID.apps.googleusercontent.com
@@ -46,7 +52,7 @@ See `docs/PO_GOOGLE_OAUTH_SETUP_GUIDE.md` for the product-owner setup path.
 For local debug OAuth setup, the Android client needs the debug signing certificate SHA-1. On the development machine, run:
 
 ```powershell
-& "$env:JAVA_HOME\bin\keytool.exe" -list -v -alias androiddebugkey -keystore "$env:USERPROFILE\.android\debug.keystore" -storepass android -keypass android
+powershell -ExecutionPolicy Bypass -File .\tools\setup_google_oauth.ps1 -PrintDebugSha1
 ```
 
 ## Next Slice
