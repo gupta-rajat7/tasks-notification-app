@@ -15,6 +15,13 @@ The product owner needs:
 - A public support email address.
 - A privacy policy URL before external testing.
 
+Supporting drafts:
+
+- OAuth setup: `docs/PO_GOOGLE_OAUTH_SETUP_GUIDE.md`
+- Privacy policy draft: `docs/PRIVACY_POLICY_DRAFT.md`
+- Store listing draft: `docs/STORE_LISTING_DRAFT.md`
+- Pro unlock design: `docs/PRO_UNLOCK_DESIGN.md`
+
 ## Technical Release Checklist
 
 - App package remains stable: `com.guptarajat.screenactivetaskreminder`.
@@ -71,6 +78,8 @@ Expected direction for V1:
 
 Final Data safety answers must be reviewed against the exact app implementation before submission.
 
+Use `docs/PRIVACY_POLICY_DRAFT.md` as the starting point, then review against the final app behavior before creating a public privacy policy URL.
+
 ## Monetization Direction
 
 Do not add ads in V1. The app promise is to reduce distraction, so ads create product trust risk.
@@ -80,6 +89,12 @@ Preferred path:
 - Free V1 for validation.
 - Later one-time Pro unlock for advanced reminder controls.
 - Implement Play Billing only after users confirm the free app is useful.
+
+See `docs/PRO_UNLOCK_DESIGN.md`. Billing is not implemented yet.
+
+## Store Listing Draft
+
+Use `docs/STORE_LISTING_DRAFT.md` as the working copy for internal testing. Do not publish the draft publicly until Google OAuth, privacy policy, and smoke testing are complete.
 
 ## Release Governance
 
@@ -91,3 +106,9 @@ Every release should have:
 - Manual smoke test evidence on emulator or phone.
 - Handoff note under `docs/handoffs/`.
 - Product owner approval before public release.
+
+## Official References
+
+- Google Play Data safety: https://support.google.com/googleplay/android-developer/answer/10787469
+- Prepare your app for Google Play review: https://support.google.com/googleplay/android-developer/answer/9859455
+- Google Play Billing Library integration: https://developer.android.com/google/play/billing/integrate

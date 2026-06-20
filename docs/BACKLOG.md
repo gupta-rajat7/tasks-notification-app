@@ -231,8 +231,24 @@ Acceptance criteria:
 
 Document and design the Pro feature gate. Do not implement billing yet.
 
+Status: Complete in `docs/handoffs/2026-06-20-MON-001-oauth-privacy-store-readiness.md`.
+
 Acceptance criteria:
 
 - Free and Pro feature matrix exists.
 - Upgrade screen mock copy exists.
 - No paid code path is added before approval.
+
+### REL-001: OAuth, Privacy, And Store Readiness Docs
+
+Document the owner-facing setup and release-readiness items needed before internal and closed testing.
+
+Status: Complete in `docs/handoffs/2026-06-20-MON-001-oauth-privacy-store-readiness.md`.
+
+Acceptance criteria:
+
+- Product owner has a plain-English Google OAuth setup guide.
+- Privacy policy draft exists for review.
+- Store listing draft exists for internal testing.
+- Performance test guidance separates emulator slowness from app slowness.
+- Play Store guide links to the supporting release documents.

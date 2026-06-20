@@ -56,6 +56,12 @@ Leave the emulator window open. In a second PowerShell window, confirm Android D
 
 7. Open the app on the emulator and test the checklist below.
 
+If the app is installed but not visible on the home screen, open the app drawer and search for `Screen Active Task Reminder`. You can also launch it from PowerShell:
+
+```powershell
+& 'C:\tmp\task-reminder-dev\android-sdk\platform-tools\adb.exe' shell am start -n com.guptarajat.screenactivetaskreminder/.MainActivity
+```
+
 ## Option B: Test On A Real Android Phone
 
 Use this when emulator setup is slow or unavailable.
@@ -113,6 +119,26 @@ $env:GRADLE_USER_HOME='C:\tmp\task-reminder-dev\gradle-home'
 - App does not feel visually crowded.
 - Text is readable in light and dark mode.
 - No screen feels like an advertisement or sales page.
+
+## If Google Sign-In Shows A Setup Message
+
+If Settings says `Google sign-in needs OAuth setup before real accounts can connect`, that is an expected configuration blocker, not an app crash.
+
+Real sign-in needs Google Cloud OAuth setup and a local Web Client ID. Use `docs/PO_GOOGLE_OAUTH_SETUP_GUIDE.md` before retesting sign-in.
+
+## If The Emulator Feels Slow
+
+The Windows emulator can be slower than a real phone, especially while Gradle, PowerShell, or Codex are also running.
+
+Before reporting app slowness:
+
+- Wait for the emulator to fully boot.
+- Stop any running Gradle build.
+- Close extra heavy apps.
+- Check whether Android home screen and Settings are also slow.
+- Repeat on a real Android phone before beta decisions.
+
+See `docs/PERFORMANCE_TEST_GUIDE.md` for the full checklist.
 
 ## Known Setup Dependencies
 

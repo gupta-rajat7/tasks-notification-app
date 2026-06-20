@@ -1,9 +1,24 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
 }
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.isFile) {
+        localPropertiesFile.inputStream().use { load(it) }
+    }
+}
+
+val googleWebClientId = (
+    localProperties.getProperty("google.web.client.id")
+        ?: providers.environmentVariable("GOOGLE_WEB_CLIENT_ID").orNull
+        ?: ""
+).trim()
 
 android {
     namespace = "com.guptarajat.screenactivetaskreminder"
@@ -15,6 +30,8 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
+
+        resValue("string", "google_web_client_id", googleWebClientId)
     }
 
     compileOptions {
