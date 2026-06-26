@@ -92,6 +92,30 @@ class TaskEmptyStateCopyTest {
         )
     }
 
+    @Test
+    fun noGoogleAccountFailureOpensAndroidAccountSetupPath() {
+        val copy = authStatusRecoveryCopy(
+            "No Google account is available on this Android device.",
+        )
+
+        assertEquals(
+            "Add a Google account in Android settings, then return here and tap Sign in with Google again.",
+            copy,
+        )
+    }
+
+    @Test
+    fun missingGoogleAccountSupportPointsToCompatibleTestDevice() {
+        val copy = authStatusRecoveryCopy(
+            "This Android device does not include Google account support.",
+        )
+
+        assertEquals(
+            "Use a Google Play emulator image or a real Android phone, then try signing in again.",
+            copy,
+        )
+    }
+
     private fun signedInSession(): AuthSession =
         AuthSession(accountId = "account-1", email = "tester@example.com")
 

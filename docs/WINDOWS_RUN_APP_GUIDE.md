@@ -150,6 +150,16 @@ For the full test checklist, use `docs/PO_WINDOWS_TEST_GUIDE.md`.
 
 ## Google Sign-In Note
 
+The current local emulator may be enough to open and test the app shell, but Google sign-in needs Google account support on the Android device.
+
+If the app says:
+
+```text
+This Android device does not include Google account support.
+```
+
+the emulator image cannot add Google accounts. Use a real Android phone, or create/run a Google Play or Google APIs emulator image, before retesting Google sign-in.
+
 If the app says:
 
 ```text

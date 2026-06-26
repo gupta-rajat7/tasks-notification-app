@@ -207,6 +207,14 @@ if ($androidSdkIsValid) {
         $connectedDevices = @($deviceOutput | Select-Object -Skip 1 | Where-Object { $_ -match "\sdevice$" })
         if ($connectedDevices.Count -gt 0) {
             Write-Result "PASS" "Connected Android device" "emulator or phone is visible to ADB"
+            $googlePackages = & $adb shell pm list packages 2>&1 | Where-Object {
+                $_ -match "com\.google\.android\.gms|com\.google\.android\.gsf|com\.android\.vending"
+            }
+            if (@($googlePackages).Count -gt 0) {
+                Write-Result "PASS" "Google account support" "Google services are present on the connected device"
+            } else {
+                Write-Result "WARN" "Google account support" "connected emulator/device has no Google services; use a Google Play emulator or real Android phone for Google sign-in"
+            }
         } else {
             Write-Result "WARN" "Connected Android device" "none visible; start emulator or connect phone before install"
         }

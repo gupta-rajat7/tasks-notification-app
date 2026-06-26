@@ -120,11 +120,14 @@ internal fun authStatusRecoveryCopy(authStatusMessage: String?): String? {
         authStatusMessage.contains("OAuth setup", ignoreCase = true) ->
             "Finish the Google Cloud OAuth setup, rebuild the app, then try signing in again."
 
+        authStatusMessage.contains("does not include Google account support", ignoreCase = true) ->
+            "Use a Google Play emulator image or a real Android phone, then try signing in again."
+
         authStatusMessage.contains("cancelled", ignoreCase = true) ->
             "No changes were made. Tap Sign in with Google when you are ready."
 
         authStatusMessage.contains("No Google account", ignoreCase = true) ->
-            "Add a Google account to Android or try again with another test device."
+            "Add a Google account in Android settings, then return here and tap Sign in with Google again."
 
         else -> "Check the account setup and internet connection, then try signing in again."
     }

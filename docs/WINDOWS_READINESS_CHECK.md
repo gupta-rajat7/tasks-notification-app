@@ -47,6 +47,7 @@ This can take several minutes.
 - Android emulator tools.
 - Local emulator named `TaskReminder_API35`.
 - Connected emulator or phone.
+- Google account support on the connected Android device.
 - Google Web Client ID for real Google sign-in.
 - GitHub CLI authentication.
 
@@ -96,6 +97,16 @@ If you see:
 start the emulator or connect a real Android phone before installing the app.
 
 Use `docs\WINDOWS_RUN_APP_GUIDE.md` for the full run steps.
+
+### Google Account Support Warning
+
+If you see:
+
+```text
+[WARN] Google account support
+```
+
+the connected emulator or phone can run the app, but cannot complete Google sign-in. Use a real Android phone, or create/run a Google Play or Google APIs emulator image, before testing Google sign-in.
 
 ### Portable Gradle Cache Warning
 

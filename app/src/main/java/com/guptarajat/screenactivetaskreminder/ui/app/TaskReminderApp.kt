@@ -84,6 +84,8 @@ import com.guptarajat.screenactivetaskreminder.auth.AuthStore
 import com.guptarajat.screenactivetaskreminder.auth.GoogleSignInClient
 import com.guptarajat.screenactivetaskreminder.auth.GoogleSignInConfig
 import com.guptarajat.screenactivetaskreminder.auth.GoogleSignInResult
+import com.guptarajat.screenactivetaskreminder.auth.googleAccountSupportUnavailableMessage
+import com.guptarajat.screenactivetaskreminder.auth.hasGoogleAccountSupport
 import com.guptarajat.screenactivetaskreminder.auth.userMessage
 import com.guptarajat.screenactivetaskreminder.data.local.CachedTask
 import com.guptarajat.screenactivetaskreminder.data.repository.CachedTaskList
@@ -275,6 +277,13 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
         }
     }
 
+    val accountSettingsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+    ) {
+        authStatusMessage =
+            "Return from Android account settings. Tap Sign in with Google to continue."
+    }
+
     fun syncGoogleTasks(accessToken: String, accountId: String?) {
         scope.launch {
             val resolvedAccountId = accountId?.takeIf { it.isNotBlank() } ?: "primary"
@@ -334,6 +343,11 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
     }
 
     fun startGoogleSignIn() {
+        if (!context.hasGoogleAccountSupport()) {
+            authStatusMessage = googleAccountSupportUnavailableMessage()
+            return
+        }
+
         val activity = context.findActivity()
         if (activity == null) {
             authStatusMessage = "Google sign-in needs an active Android screen."
@@ -403,6 +417,27 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
                 notificationSettingsLauncher.launch(fallbackIntent)
             }.onFailure {
                 reminderStatusMessage = "Android notification settings could not be opened."
+            }
+        }
+    }
+
+    fun openGoogleAccountSettings() {
+        if (!context.hasGoogleAccountSupport()) {
+            authStatusMessage = googleAccountSupportUnavailableMessage()
+            return
+        }
+
+        val addAccountIntent = Intent(AndroidSettings.ACTION_ADD_ACCOUNT).apply {
+            putExtra(AndroidSettings.EXTRA_ACCOUNT_TYPES, arrayOf("com.google"))
+        }
+        runCatching {
+            accountSettingsLauncher.launch(addAccountIntent)
+        }.onFailure {
+            runCatching {
+                accountSettingsLauncher.launch(Intent(AndroidSettings.ACTION_SETTINGS))
+            }.onFailure {
+                authStatusMessage =
+                    "Android account settings could not be opened. Add a Google account from device Settings."
             }
         }
     }
@@ -514,6 +549,7 @@ fun TaskReminderRoot(modifier: Modifier = Modifier) {
                 onDismissAuthStatus = {
                     authStatusMessage = null
                 },
+                onAddGoogleAccountClick = { openGoogleAccountSettings() },
                 onDismissSyncStatus = {
                     syncStatusMessage = null
                 },
@@ -876,6 +912,7 @@ fun TaskReminderApp(
     onGoogleTasksSyncClick: () -> Unit,
     onTaskListSelectionChange: (String, Boolean) -> Unit,
     onDismissAuthStatus: () -> Unit,
+    onAddGoogleAccountClick: () -> Unit,
     onDismissSyncStatus: () -> Unit,
     reminderStatusMessage: String?,
     areNotificationsAllowed: Boolean,
@@ -981,6 +1018,7 @@ fun TaskReminderApp(
                     onGoogleSignInClick = onGoogleSignInClick,
                     onGoogleSignOutClick = onGoogleSignOutClick,
                     onDismissAuthStatus = onDismissAuthStatus,
+                    onAddGoogleAccountClick = onAddGoogleAccountClick,
                     onReminderIntervalChange = onReminderIntervalChange,
                     onSnoozeMinutesChange = onSnoozeMinutesChange,
                     onQuietHoursEnabledChange = onQuietHoursEnabledChange,
@@ -1596,6 +1634,7 @@ private fun SettingsScreen(
     onGoogleSignInClick: () -> Unit,
     onGoogleSignOutClick: () -> Unit,
     onDismissAuthStatus: () -> Unit,
+    onAddGoogleAccountClick: () -> Unit,
     onReminderIntervalChange: (Int) -> Unit,
     onSnoozeMinutesChange: (Int) -> Unit,
     onQuietHoursEnabledChange: (Boolean) -> Unit,
@@ -1624,6 +1663,7 @@ private fun SettingsScreen(
             onGoogleSignInClick = onGoogleSignInClick,
             onGoogleSignOutClick = onGoogleSignOutClick,
             onDismissAuthStatus = onDismissAuthStatus,
+            onAddGoogleAccountClick = onAddGoogleAccountClick,
         )
 
         ElevatedCard(modifier = Modifier.fillMaxWidth()) {
@@ -1896,6 +1936,7 @@ private fun GoogleAccountCard(
     onGoogleSignInClick: () -> Unit,
     onGoogleSignOutClick: () -> Unit,
     onDismissAuthStatus: () -> Unit,
+    onAddGoogleAccountClick: () -> Unit,
 ) {
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -1918,6 +1959,8 @@ private fun GoogleAccountCard(
             )
 
             if (!authStatusMessage.isNullOrBlank()) {
+                val canAddGoogleAccount =
+                    authStatusMessage.contains("No Google account", ignoreCase = true)
                 ListItem(
                     headlineContent = { Text(authStatusMessage) },
                     supportingContent = {
@@ -1929,6 +1972,14 @@ private fun GoogleAccountCard(
                         }
                     },
                 )
+                if (canAddGoogleAccount) {
+                    OutlinedButton(
+                        onClick = onAddGoogleAccountClick,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text("Add Google account")
+                    }
+                }
             }
 
             Row(

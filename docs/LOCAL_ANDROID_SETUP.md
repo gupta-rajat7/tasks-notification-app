@@ -1,5 +1,7 @@
 # Local Android Build Setup
 
+For a fresh Windows computer, start with `docs/WINDOWS_SETUP_REQUIREMENTS.md`. This file records the local build paths and commands used by this workspace.
+
 This project can build with a local portable toolchain. The current workspace uses:
 
 - JDK 17: `C:\tmp\task-reminder-dev\jdk\jdk-17.0.19+10`
@@ -8,13 +10,19 @@ This project can build with a local portable toolchain. The current workspace us
 - Android Gradle Plugin: 8.13.2
 - Gradle wrapper: 8.13
 
-`local.properties` should exist on the machine and point Gradle to the Android SDK:
+`local.properties` should exist on each machine and point Gradle to that machine's Android SDK:
 
 ```properties
 sdk.dir=C\:\\tmp\\task-reminder-dev\\android-sdk
 ```
 
-`local.properties` is ignored by Git because it is machine-specific.
+Use the real Android SDK path on a different Windows computer, for example:
+
+```properties
+sdk.dir=C\:\\Users\\<you>\\AppData\\Local\\Android\\Sdk
+```
+
+`local.properties` is ignored by Git because it is machine-specific. Google OAuth values are also stored there locally and must be configured separately on each Windows computer.
 
 ## Build Commands
 
@@ -65,3 +73,5 @@ The portable SDK has Android 16 platform/build tools installed. An Android 16 em
 Current local emulator:
 
 - `TaskReminder_API35`, based on Android 15, usable for smoke testing because the app supports Android API 26 and higher.
+
+Google sign-in requires Google account support on the Android device. Use a real Android phone, or an emulator image labeled Google Play or Google APIs. A plain Android `default` emulator image can open the app shell but cannot add Google accounts.

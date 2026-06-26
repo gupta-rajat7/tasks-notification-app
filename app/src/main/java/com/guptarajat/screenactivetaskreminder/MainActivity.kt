@@ -46,6 +46,7 @@ private fun TaskReminderHomeScreenPreview() {
             onGoogleTasksSyncClick = {},
             onTaskListSelectionChange = { _, _ -> },
             onDismissAuthStatus = {},
+            onAddGoogleAccountClick = {},
             onDismissSyncStatus = {},
             reminderStatusMessage = null,
             areNotificationsAllowed = false,

@@ -29,6 +29,7 @@ V1 must not make Usage Access, AccessibilityService, or forced overlays part of 
 - [Roadmap](docs/ROADMAP.md)
 - [Backlog](docs/BACKLOG.md)
 - [Development Workflow](docs/DEVELOPMENT_WORKFLOW.md)
+- [Windows Setup Requirements](docs/WINDOWS_SETUP_REQUIREMENTS.md)
 - [Local Android Build Setup](docs/LOCAL_ANDROID_SETUP.md)
 - [Windows Readiness Check](docs/WINDOWS_READINESS_CHECK.md)
 - [End-To-End Test Readiness](docs/E2E_TEST_READINESS.md)
@@ -47,6 +48,7 @@ Prerequisites:
 
 - JDK 17 available through `JAVA_HOME` or `PATH`.
 - Android SDK Platform 36 installed.
+- Local setup from [Windows Setup Requirements](docs/WINDOWS_SETUP_REQUIREMENTS.md) when using a new Windows computer.
 - `local.properties` present locally when Android Studio has not already configured the SDK path:
 
 ```properties

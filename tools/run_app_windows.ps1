@@ -12,7 +12,7 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $devRoot = "C:\tmp\task-reminder-dev"
-$jdkHome = Join-Path $devRoot "jdk\jdk-17.0.19+10"
+$portableJdkHome = Join-Path $devRoot "jdk\jdk-17.0.19+10"
 $androidSdkFallback = Join-Path $devRoot "android-sdk"
 $gradleHome = Join-Path $devRoot "gradle-home"
 $fallbackGradleHome = Join-Path $repoRoot ".gradle-home"
@@ -60,6 +60,22 @@ function Require-Path {
     if (-not (Test-Path $Path)) {
         throw "$Description was not found at $Path"
     }
+}
+
+function Resolve-JdkHome {
+    if ($env:JAVA_HOME) {
+        $javaFromEnv = Join-Path $env:JAVA_HOME "bin\java.exe"
+        if (Test-Path $javaFromEnv) {
+            return $env:JAVA_HOME
+        }
+    }
+
+    $portableJava = Join-Path $portableJdkHome "bin\java.exe"
+    if (Test-Path $portableJava) {
+        return $portableJdkHome
+    }
+
+    throw "JDK 17 was not found. Set JAVA_HOME to a JDK 17 installation or install the portable JDK at $portableJdkHome."
 }
 
 function Test-DirectoryWritable {
@@ -119,12 +135,13 @@ $adb = Join-Path $androidSdk "platform-tools\adb.exe"
 $emulator = Join-Path $androidSdk "emulator\emulator.exe"
 $gradleWrapper = Join-Path $repoRoot "gradlew.bat"
 $apkPath = Join-Path $repoRoot "app\build\outputs\apk\debug\app-debug.apk"
+$jdkHome = Resolve-JdkHome
 
 Write-Host "Screen Active Task Reminder - Windows Run Script"
 Write-Host "Repo: $repoRoot"
 
 Require-Path $gradleWrapper "Gradle wrapper"
-Require-Path $jdkHome "Portable JDK"
+Require-Path (Join-Path $jdkHome "bin\java.exe") "JDK java.exe"
 Require-Path $androidSdk "Android SDK"
 Require-Path $adb "ADB"
 if ($StartEmulator) {

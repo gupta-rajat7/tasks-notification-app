@@ -124,6 +124,8 @@ $env:GRADLE_USER_HOME='C:\tmp\task-reminder-dev\gradle-home'
 
 ## If Google Sign-In Shows A Setup Message
 
+If Settings says `This Android device does not include Google account support`, the emulator image cannot add Google accounts. That is an emulator setup blocker, not an app crash. Test Google sign-in on a real Android phone, or create/run a Google Play or Google APIs emulator image.
+
 If Settings says `Google sign-in needs OAuth setup before real accounts can connect`, that is an expected configuration blocker, not an app crash.
 
 Real sign-in needs Google Cloud OAuth setup and a local Web Client ID. Use `docs/PO_GOOGLE_OAUTH_SETUP_GUIDE.md` before retesting sign-in.

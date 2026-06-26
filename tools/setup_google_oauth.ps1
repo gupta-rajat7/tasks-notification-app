@@ -8,8 +8,8 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $devRoot = "C:\tmp\task-reminder-dev"
-$jdkHome = Join-Path $devRoot "jdk\jdk-17.0.19+10"
-$androidSdk = Join-Path $devRoot "android-sdk"
+$portableJdkHome = Join-Path $devRoot "jdk\jdk-17.0.19+10"
+$androidSdkFallback = Join-Path $devRoot "android-sdk"
 $localPropertiesPath = Join-Path $repoRoot "local.properties"
 $webClientIdPattern = "^[A-Za-z0-9._-]+\.apps\.googleusercontent\.com$"
 
@@ -53,6 +53,39 @@ function Get-LocalProperty {
     return ($match -replace "^\s*$([regex]::Escape($Name))\s*=\s*", "").Trim()
 }
 
+function Get-AndroidSdkCandidate {
+    if ($env:ANDROID_SDK_ROOT -and (Test-Path $env:ANDROID_SDK_ROOT)) {
+        return $env:ANDROID_SDK_ROOT
+    }
+
+    if (Test-Path $androidSdkFallback) {
+        return $androidSdkFallback
+    }
+
+    return $null
+}
+
+function Resolve-Keytool {
+    if ($env:JAVA_HOME) {
+        $keytoolFromEnv = Join-Path $env:JAVA_HOME "bin\keytool.exe"
+        if (Test-Path $keytoolFromEnv) {
+            return $keytoolFromEnv
+        }
+    }
+
+    $portableKeytool = Join-Path $portableJdkHome "bin\keytool.exe"
+    if (Test-Path $portableKeytool) {
+        return $portableKeytool
+    }
+
+    $pathKeytool = Get-Command "keytool.exe" -ErrorAction SilentlyContinue
+    if ($pathKeytool) {
+        return $pathKeytool.Source
+    }
+
+    throw "JDK keytool was not found. Set JAVA_HOME to a JDK 17 installation or install the portable JDK at $portableJdkHome."
+}
+
 function Set-LocalProperty {
     param(
         [string]$Name,
@@ -83,12 +116,8 @@ function Set-LocalProperty {
 }
 
 function Get-DebugSha1 {
-    $keytool = Join-Path $jdkHome "bin\keytool.exe"
+    $keytool = Resolve-Keytool
     $debugKeystore = Join-Path $env:USERPROFILE ".android\debug.keystore"
-
-    if (-not (Test-Path $keytool)) {
-        throw "JDK keytool was not found at $keytool"
-    }
 
     if (-not (Test-Path $debugKeystore)) {
         throw "Android debug keystore was not found at $debugKeystore. Build the app once, then rerun this command."
@@ -115,11 +144,12 @@ if ($PrintDebugSha1) {
 
 $existingSdkDir = Convert-LocalPropertiesPath (Get-LocalProperty "sdk.dir")
 if (-not $existingSdkDir) {
-    if (Test-Path $androidSdk) {
-        Set-LocalProperty "sdk.dir" (Convert-ToLocalPropertiesPath $androidSdk)
+    $androidSdkCandidate = Get-AndroidSdkCandidate
+    if ($androidSdkCandidate) {
+        Set-LocalProperty "sdk.dir" (Convert-ToLocalPropertiesPath $androidSdkCandidate)
         Write-Host "Added sdk.dir to local.properties."
     } else {
-        Write-Host "WARNING: sdk.dir is not set and $androidSdk was not found."
+        Write-Host "WARNING: sdk.dir is not set. Set ANDROID_SDK_ROOT or add sdk.dir to local.properties."
     }
 }
 
